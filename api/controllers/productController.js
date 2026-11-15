@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Product from "../models/Product.js";
+import Product from "../models/product.js";
 
 // Only these fields can ever be set from the request body
 function cleanProduct(body, partial = false) {

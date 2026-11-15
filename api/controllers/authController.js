@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import Merchant from "../models/Merchant.js";
+import config from "../config/index.js";
+import Merchant from "../models/merchant.js";
 import { formatPhone } from "../utils/phone.js";
 
 const signToken = (m) => jwt.sign({ id: m._id }, config.jwtSecret, { expiresIn: "7d" });

@@ -27,6 +27,9 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: { type: String, enum: ["PAY_ON_DELIVERY", "MPESA"], default: "PAY_ON_DELIVERY" },
     paymentStatus: { type: String, enum: ["UNPAID", "PAID"], default: "UNPAID" },
+    checkoutIds: { type: [String], index: true },
+paymentAttempts: { type: Number, default: 0 },
+paymentNote: String,
     mpesaReceipt: String,
   },
   { timestamps: true }

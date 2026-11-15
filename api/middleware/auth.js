@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
-import Merchant from "../models/Merchant.js";
+import config from "../config/index.js";
+import Merchant from "../models/merchant.js";
 
 export default async function requireAuth(req, res, next) {
   const header = req.headers.authorization || "";

@@ -1,5 +1,5 @@
-import Merchant from "../models/Merchant.js";
-import Product from "../models/Product.js";
+import Merchant from "../models/merchant.js";
+import Product from "../models/product.js";
 
 export async function getStorefront(req, res) {
   try {
