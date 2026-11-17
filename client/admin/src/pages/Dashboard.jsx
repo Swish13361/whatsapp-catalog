@@ -8,6 +8,7 @@ import {
   adminOrders,
   adminUpdateOrderStatus,
   adminMarkPaid,
+  uploadAdminProductImage,
 } from "../api.js";
 import StoreLinkCard from "../components/StoreLinkCard.jsx";
 import { useLanguage } from "../useLanguage.js";
@@ -71,6 +72,10 @@ const [newProduct, setNewProduct] = useState({
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
   const [markingPaidId, setMarkingPaidId] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [editingPreview, setEditingPreview] = useState(null);
+  const [editingFile, setEditingFile] = useState(null);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -120,7 +125,7 @@ const [newProduct, setNewProduct] = useState({
 const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      await adminCreateProduct({
+      const created = await adminCreateProduct({
         name: newProduct.name,
         description: newProduct.description,
         category: newProduct.category,
@@ -129,8 +134,19 @@ const handleCreate = async (e) => {
         imageUrl: newProduct.imageUrl || undefined,
         stock: newProduct.stock === "" ? null : Number(newProduct.stock),
       });
+
+      if (selectedFile && created?._id) {
+        try {
+          await uploadAdminProductImage(created._id, selectedFile);
+        } catch {
+          // image upload failed; product still created
+        }
+      }
+
       setNewProduct({ name: "", description: "", category: "", price: "", currency: "USD", imageUrl: "" });
       setShowCreate(false);
+      setSelectedFile(null);
+      setImagePreview(null);
       fetchProducts();
     } catch (err) {
       setError(err.message || "Failed to create product");
@@ -146,7 +162,7 @@ const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editingProduct) return;
     try {
-      await adminUpdateProduct(editingProduct._id, {
+      const updated = await adminUpdateProduct(editingProduct._id, {
         name: editingProduct.name,
         description: editingProduct.description,
         category: editingProduct.category || "Other",
@@ -155,8 +171,19 @@ const handleUpdate = async (e) => {
         imageUrl: editingProduct.imageUrl || undefined,
         stock: editingProduct.stock === "" || editingProduct.stock === undefined ? null : Number(editingProduct.stock),
       });
+
+      if (editingFile && updated?._id) {
+        try {
+          await uploadAdminProductImage(updated._id, editingFile);
+        } catch {
+          // image upload failed; product still updated
+        }
+      }
+
       setEditingProduct(null);
       setShowCreate(false);
+      setEditingFile(null);
+      setEditingPreview(null);
       fetchProducts();
     } catch (err) {
       setError(err.message || "Failed to update product");
@@ -298,12 +325,47 @@ const handleUpdate = async (e) => {
                   </Select>
                 </div>
                 <div className="flex flex-column gap-1 lg:col-span-2">
-                  <label className="text-xs font-bold text-muted">Image URL</label>
-                  <Input placeholder="https://..." value={newProduct.imageUrl} onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })} />
+                  <label className="text-xs font-bold text-muted">Product image</label>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      id="product-image"
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setSelectedFile(file);
+                        if (file) setImagePreview(URL.createObjectURL(file));
+                        else setImagePreview(null);
+                      }}
+                    />
+                    <label
+                      htmlFor="product-image"
+                      className="inline-flex items-center justify-center gap-2 min-h-[44px] px-3 py-2 rounded-lg border border-line border-dashed bg-surface text-muted text-sm font-medium cursor-pointer hover:bg-accent-soft hover:text-accent-ink hover:border-accent transition-colors"
+                    >
+                      {selectedFile ? "Change image" : "Choose image"}
+                    </label>
+                    {imagePreview && (
+                      <div className="flex items-center gap-2">
+                        <img src={imagePreview} alt="Product preview" className="w-24 h-24 object-cover rounded-lg border border-line" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedFile(null);
+                            setImagePreview(null);
+                            document.getElementById("product-image").value = "";
+                          }}
+                          className="text-xs text-danger hover:text-danger-hover underline underline-offset-2"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="lg:col-span-3 flex gap-2">
                   <Button variant="primary" type="submit">Save product</Button>
-                  <Button variant="secondary" type="button" onClick={() => setShowCreate(false)}>Cancel</Button>
+                  <Button variant="secondary" type="button" onClick={() => { setShowCreate(false); setSelectedFile(null); setImagePreview(null); }}>Cancel</Button>
                 </div>
               </form>
             </Card>
@@ -340,12 +402,47 @@ const handleUpdate = async (e) => {
                   </Select>
                 </div>
                 <div className="flex flex-column gap-1 lg:col-span-2">
-                  <label className="text-xs font-bold text-muted">Image URL</label>
-                  <Input placeholder="https://..." value={editingProduct.imageUrl} onChange={(e) => setEditingProduct({ ...editingProduct, imageUrl: e.target.value })} />
+                  <label className="text-xs font-bold text-muted">Product image</label>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      id="product-image-edit"
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setEditingFile(file);
+                        if (file) setEditingPreview(URL.createObjectURL(file));
+                        else setEditingPreview(null);
+                      }}
+                    />
+                    <label
+                      htmlFor="product-image-edit"
+                      className="inline-flex items-center justify-center gap-2 min-h-[44px] px-3 py-2 rounded-lg border border-line border-dashed bg-surface text-muted text-sm font-medium cursor-pointer hover:bg-accent-soft hover:text-accent-ink hover:border-accent transition-colors"
+                    >
+                      {editingFile ? "Change image" : "Choose image"}
+                    </label>
+                    {editingPreview && (
+                      <div className="flex items-center gap-2">
+                        <img src={editingPreview} alt="Product preview" className="w-24 h-24 object-cover rounded-lg border border-line" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingFile(null);
+                            setEditingPreview(null);
+                            document.getElementById("product-image-edit").value = "";
+                          }}
+                          className="text-xs text-danger hover:text-danger-hover underline underline-offset-2"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="lg:col-span-3 flex gap-2">
                   <Button variant="primary" type="submit">Save changes</Button>
-                  <Button variant="secondary" type="button" onClick={() => { setEditingProduct(null); setShowCreate(false); }}>Cancel</Button>
+                  <Button variant="secondary" type="button" onClick={() => { setEditingProduct(null); setShowCreate(false); setEditingFile(null); setEditingPreview(null); }}>Cancel</Button>
                 </div>
               </form>
             </Card>

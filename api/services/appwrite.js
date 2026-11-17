@@ -1,13 +1,27 @@
-import { Client, Storage, InputFile } from "node-appwrite";
+import { Client, Storage } from "node-appwrite";
 import config from "../config/index.js";
 
-const client = new Client();
-client
-  .setEndpoint(config.appwrite.endpoint)
-  .setProject(config.appwrite.projectId)
-  .setKey(config.appwrite.apiKey);
+let client = null;
+let storage = null;
 
-const storage = new Storage(client);
+function ensureClient() {
+  if (client) return storage;
+  if (
+    !config.appwrite.endpoint ||
+    !config.appwrite.projectId ||
+    !config.appwrite.apiKey ||
+    !config.appwrite.bucketId
+  ) {
+    return null;
+  }
+  client = new Client();
+  client
+    .setEndpoint(config.appwrite.endpoint)
+    .setProject(config.appwrite.projectId)
+    .setKey(config.appwrite.apiKey);
+  storage = new Storage(client);
+  return storage;
+}
 
 const isConfigured = Boolean(
   config.appwrite.endpoint &&
@@ -17,24 +31,22 @@ const isConfigured = Boolean(
 );
 
 export async function uploadImage(buffer, filename, mimeType) {
-  if (!isConfigured) throw new Error("Appwrite storage is not configured");
-  const file = await storage.createFile(
-    config.appwrite.bucketId,
-    "unique()",
-    InputFile.fromBuffer(buffer, filename),
-    undefined,
-    mimeType ? [mimeType] : undefined
-  );
+  const st = ensureClient();
+  if (!st) throw new Error("Appwrite storage is not configured");
+  const file = new File([buffer], filename, { type: mimeType || "application/octet-stream" });
+  const result = await st.createFile(config.appwrite.bucketId, "unique()", file);
   return {
-    fileId: file.$id,
-    imageUrl: `${config.appwrite.endpoint}/storage/buckets/${config.appwrite.bucketId}/files/${file.$id}/preview?project=${config.appwrite.projectId}`,
+    fileId: result.$id,
+    imageUrl: `${config.appwrite.endpoint}/storage/buckets/${config.appwrite.bucketId}/files/${result.$id}/preview?project=${config.appwrite.projectId}`,
   };
 }
 
 export async function deleteImage(fileId) {
-  if (!isConfigured || !fileId) return;
+  if (!fileId) return;
+  const st = ensureClient();
+  if (!st) return;
   try {
-    await storage.deleteFile(config.appwrite.bucketId, fileId);
+    await st.deleteFile(config.appwrite.bucketId, fileId);
   } catch {
     // ignore missing file errors
   }

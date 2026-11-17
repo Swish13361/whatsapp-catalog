@@ -62,6 +62,15 @@ export const adminDeleteProduct = (id) =>
     method: "DELETE",
   });
 
+export const uploadAdminProductImage = (id, file) => {
+  const formData = new FormData();
+  formData.append("image", file);
+  return request(`/products/${encodeURIComponent(id)}/image`, {
+    method: "POST",
+    body: formData,
+  });
+};
+
 export const adminOrders = (filters = {}) => {
   const query = new URLSearchParams();
   if (filters.status) query.set("status", filters.status);
