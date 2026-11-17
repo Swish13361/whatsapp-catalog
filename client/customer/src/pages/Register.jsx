@@ -10,6 +10,7 @@ import {
   Panel,
   Icon,
   PasswordStrength,
+  Checkbox,
   Toast,
   Page,
 } from "../ui/index.js";
@@ -33,8 +34,9 @@ export default function Register() {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  const validate = () => {
+const validate = () => {
     const errors = {};
     const name = values.name.trim();
     const email = values.email.trim();
@@ -44,6 +46,7 @@ export default function Register() {
     else if (!EMAIL_PATTERN.test(email)) errors.email = "Enter a valid email address.";
     if (!values.password) errors.password = "Enter a password.";
     else if (values.password.length < 8) errors.password = "Use at least 8 characters.";
+    if (!acceptedTerms) errors.terms = "You must accept the Terms and Conditions.";
     return errors;
   };
 
@@ -152,10 +155,23 @@ export default function Register() {
                     {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
-                {fieldErrors.password && <p className="text-xs text-danger animate-in fade-in-0">{fieldErrors.password}</p>}
+{fieldErrors.password && <p className="text-xs text-danger animate-in fade-in-0">{fieldErrors.password}</p>}
                 <PasswordStrength password={values.password} />
               </div>
-              <Button variant="primary" className="w-full h-10" loading={loading} type="submit">
+              <div className="form-field">
+                <Checkbox
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  label={
+                    <>
+                      I agree to the <a href="/terms" className="text-accent hover:text-accent-hover underline underline-offset-2">Terms and Conditions</a> and <a href="/privacy" className="text-accent hover:text-accent-hover underline underline-offset-2">Privacy Policy</a>
+                    </>
+                  }
+                  error={Boolean(fieldErrors.terms)}
+                />
+                {fieldErrors.terms && <p className="text-xs text-danger animate-in fade-in-0">{fieldErrors.terms}</p>}
+              </div>
+              <Button variant="primary" className="w-full h-10" loading={loading} type="submit" disabled={!acceptedTerms}>
                 {t("createAccount")}
               </Button>
               <p className="text-xs text-center text-muted">{t("noCardNeeded")}</p>

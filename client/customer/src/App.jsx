@@ -13,6 +13,9 @@ import Checkout from "./pages/Checkout.jsx";
 import MyOrders from "./pages/MyOrders.jsx";
 import OrderDetail from "./pages/OrderDetail.jsx";
 import Account from "./pages/Account.jsx";
+import Terms from "./pages/Terms.jsx";
+import Privacy from "./pages/Privacy.jsx";
+import RefundPolicy from "./pages/RefundPolicy.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import AdminAuth from "./admin/AdminAuth.jsx";
 import AdminLayout from "./admin/AdminLayout.jsx";
@@ -58,6 +61,9 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/checkout" element={<PrivateRoute element={<Checkout />} />} />
           <Route path="/checkout/:orderId" element={<PrivateRoute element={<Checkout />} />} />
           <Route path="/orders" element={<PrivateRoute element={<MyOrders />} />} />

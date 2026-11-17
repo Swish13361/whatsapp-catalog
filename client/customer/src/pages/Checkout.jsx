@@ -32,6 +32,31 @@ import { Footer } from "../layout/Footer.jsx";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+$/;
 
+const ORDER_LOG_KEY = "aether-orders";
+
+function readOrderLog() {
+  try {
+    return JSON.parse(localStorage.getItem(ORDER_LOG_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function writeOrderLog(orders) {
+  try {
+    localStorage.setItem(ORDER_LOG_KEY, JSON.stringify(orders));
+  } catch {
+  }
+}
+
+function addOrderToLog(order) {
+  const existing = readOrderLog();
+  const exists = existing.some((o) => o.orderCode === order.orderCode);
+  if (!exists) {
+    writeOrderLog([order, ...existing]);
+  }
+}
+
 function localizeError(message, t) {
   if (message === "Enter a valid email address for delivery") return t("invalidEmail");
   const walletError = message.match(/^USDT payments on (.+) do not have a valid wallet address configured yet$/);
@@ -199,6 +224,38 @@ export default function Checkout() {
 
   const isPaid = status?.paymentStatus === "PAID";
   const expired = status?.paymentStatus === "EXPIRED";
+
+  useEffect(() => {
+    if (isPaid && status && orderId) {
+      const stashedItems = sessionStorage.getItem(`aether-order-items-${orderId}`);
+      let items = [];
+      try {
+        items = JSON.parse(stashedItems || "[]");
+      } catch {
+        items = [];
+      }
+      const orderData = {
+        orderCode: orderId,
+        status: status.status,
+        paymentStatus: status.paymentStatus,
+        total: status.total,
+        currency: status.currency || "USDT",
+        createdAt: status.createdAt || new Date().toISOString(),
+        customerName: status.customerName || customerName,
+        customerEmail: status.customerEmail || trimmedEmail,
+        items: items.map((item) => ({
+          name: item.name,
+          quantity: item.qty,
+          price: item.price,
+          currency: item.currency,
+        })),
+        paymentMethod: status.paymentMethod,
+        paymentNetwork: status.paymentNetwork,
+      };
+      addOrderToLog(orderData);
+      sessionStorage.removeItem(`aether-order-items-${orderId}`);
+    }
+  }, [isPaid, status, orderId, customerName, trimmedEmail]);
 
   return (
     <ToastProvider>

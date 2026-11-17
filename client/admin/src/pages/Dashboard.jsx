@@ -55,13 +55,14 @@ function Dashboard() {
   const { t } = useLanguage();
   const [merchant, setMerchant] = useState(null);
   const [products, setProducts] = useState([]);
-  const [newProduct, setNewProduct] = useState({
+const [newProduct, setNewProduct] = useState({
     name: "",
     description: "",
     category: "",
     price: "",
     currency: "USD",
     imageUrl: "",
+    stock: "",
   });
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -116,7 +117,7 @@ function Dashboard() {
     };
   }, [paymentFilter, statusFilter]);
 
-  const handleCreate = async (e) => {
+const handleCreate = async (e) => {
     e.preventDefault();
     try {
       await adminCreateProduct({
@@ -126,6 +127,7 @@ function Dashboard() {
         price: Number(newProduct.price),
         currency: newProduct.currency,
         imageUrl: newProduct.imageUrl || undefined,
+        stock: newProduct.stock === "" ? null : Number(newProduct.stock),
       });
       setNewProduct({ name: "", description: "", category: "", price: "", currency: "USD", imageUrl: "" });
       setShowCreate(false);
@@ -135,12 +137,12 @@ function Dashboard() {
     }
   };
 
-  const handleEdit = async (product) => {
-    setEditingProduct({ ...product });
+const handleEdit = (product) => {
+    setEditingProduct({ ...product, stock: product.stock ?? "" });
     setShowCreate(true);
   };
 
-  const handleUpdate = async (e) => {
+const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editingProduct) return;
     try {
@@ -151,6 +153,7 @@ function Dashboard() {
         price: Number(editingProduct.price),
         currency: editingProduct.currency || "KES",
         imageUrl: editingProduct.imageUrl || undefined,
+        stock: editingProduct.stock === "" || editingProduct.stock === undefined ? null : Number(editingProduct.stock),
       });
       setEditingProduct(null);
       setShowCreate(false);
@@ -276,7 +279,12 @@ function Dashboard() {
                 </div>
                 <div className="flex flex-column gap-1">
                   <label className="text-xs font-bold text-muted">Category</label>
-                  <Input placeholder="Category (e.g. Templates)" value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} maxLength={40} />
+<Input placeholder="Category (e.g. Templates)" value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} maxLength={40} />
+                </div>
+                <div className="flex flex-column gap-1">
+                  <label className="text-xs font-bold text-muted">Stock Quantity</label>
+                  <Input type="number" placeholder="Leave empty for unlimited" value={newProduct.stock} onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })} min="0" step="1" />
+                  <p className="text-xs text-muted">Empty = unlimited stock</p>
                 </div>
                 <div className="flex flex-column gap-1">
                   <label className="text-xs font-bold text-muted">Price in USD</label>
@@ -313,7 +321,12 @@ function Dashboard() {
                 </div>
                 <div className="flex flex-column gap-1">
                   <label className="text-xs font-bold text-muted">Category</label>
-                  <Input placeholder="Category" value={editingProduct.category || ""} onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })} maxLength={40} />
+<Input placeholder="Category" value={editingProduct.category || ""} onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })} maxLength={40} />
+                </div>
+                <div className="flex flex-column gap-1">
+                  <label className="text-xs font-bold text-muted">Stock Quantity</label>
+                  <Input type="number" placeholder="Leave empty for unlimited" value={editingProduct.stock ?? ""} onChange={(e) => setEditingProduct({ ...editingProduct, stock: e.target.value })} min="0" step="1" />
+                  <p className="text-xs text-muted">Empty = unlimited stock</p>
                 </div>
                 <div className="flex flex-column gap-1">
                   <label className="text-xs font-bold text-muted">Price</label>
@@ -341,9 +354,10 @@ function Dashboard() {
             <EmptyState title="Your catalogue is ready for its first product" description="Add an item so customers can start browsing your shop." />
           ) : (
             <div className="overflow-x-auto border border-line rounded-lg shadow-sm">
-              <Table
+<Table
                 columns={[
                   { key: "image", label: "Product" },
+                  { key: "stock", label: "Stock" },
                   { key: "price", label: "Price" },
                   { key: "actions", label: "" },
                 ]}
@@ -355,6 +369,7 @@ function Dashboard() {
                       <span className="font-medium text-ink truncate">{product.name}</span>
                     </div>
                   ),
+                  stock: <span className="text-sm text-text">{product.stock == null ? "∞ Unlimited" : product.stock}</span>,
                   price: <PriceTag amount={product.price} currency={product.currency || "USDT"} />,
                   actions: (
                     <div className="flex items-center gap-2">

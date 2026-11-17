@@ -95,7 +95,7 @@ export async function customerLogin(req, res) {
     }
 
     const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+password");
-    const ok = user && (await bcrypt.compare(password, user.passwordHash));
+    const ok = user && (await bcrypt.compare(password, user.password));
     if (!ok) {
       return res.status(401).json({ error: "Invalid email or password" });
     }

@@ -9,6 +9,7 @@ import {
   Card,
   Panel,
   Icon,
+  Checkbox,
   Toast,
   EmptyStateWithAction,
   Page,
@@ -34,6 +35,7 @@ export default function Login() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     if (auth.status === "authenticated") {
@@ -47,6 +49,7 @@ export default function Login() {
     if (!email.trim()) errors.email = "Enter your email address.";
     else if (!EMAIL_PATTERN.test(email.trim())) errors.email = "Enter a valid email address.";
     if (!password) errors.password = "Enter your password.";
+    if (!acceptedTerms) errors.terms = "You must accept the Terms and Conditions.";
     setFieldErrors(errors);
     setServerError("");
     if (Object.keys(errors).length) {
@@ -132,9 +135,22 @@ export default function Login() {
                     {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
-                {fieldErrors.password && <p className="text-xs text-danger animate-in fade-in-0">{fieldErrors.password}</p>}
+{fieldErrors.password && <p className="text-xs text-danger animate-in fade-in-0">{fieldErrors.password}</p>}
               </div>
-              <Button variant="primary" className="w-full h-10" loading={loading} type="submit">
+              <div className="form-field">
+                <Checkbox
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  label={
+                    <>
+                      I agree to the <a href="/terms" className="text-accent hover:text-accent-hover underline underline-offset-2">Terms and Conditions</a> and <a href="/privacy" className="text-accent hover:text-accent-hover underline underline-offset-2">Privacy Policy</a>
+                    </>
+                  }
+                  error={Boolean(fieldErrors.terms)}
+                />
+                {fieldErrors.terms && <p className="text-xs text-danger animate-in fade-in-0">{fieldErrors.terms}</p>}
+              </div>
+              <Button variant="primary" className="w-full h-10" loading={loading} type="submit" disabled={!acceptedTerms}>
                 {t("signIn")}
               </Button>
               <p className="text-xs text-center text-muted">
