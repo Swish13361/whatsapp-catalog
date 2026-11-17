@@ -1,8 +1,19 @@
 import { create } from "zustand";
 import { getStore } from "../api.js";
+import { getActiveStaticProducts } from "../data/staticProducts.js";
 
 const STORE_CACHE_MS = 30_000;
 export const SINGLE_STORE_KEY = "shop";
+
+function mergeProducts(apiProducts, staticProducts) {
+  const merged = [...apiProducts];
+  for (const staticProduct of staticProducts) {
+    if (!merged.some(p => p._id === staticProduct._id)) {
+      merged.push(staticProduct);
+    }
+  }
+  return merged;
+}
 
 export const useStoreDataStore = create((set, get) => ({
   stores: {},
@@ -42,13 +53,16 @@ export const useStoreDataStore = create((set, get) => ({
     try {
       const data = await getStore(slug);
       if (!data.store) throw new Error("Store data was missing from the response.");
+      const apiProducts = data.products || [];
+      const staticProducts = getActiveStaticProducts();
+      const allProducts = mergeProducts(apiProducts, staticProducts);
       set((state) => ({
         stores: {
           ...state.stores,
           [storeKey]: {
             slug: storeKey,
             merchant: data.store,
-            products: data.products || [],
+            products: allProducts,
             paymentOptions: {
               supportedUsdtNetworks: data.paymentOptions?.supportedUsdtNetworks || ["TRC20", "BEP20", "BINANCE"],
               usdtNetworks: data.paymentOptions?.usdtNetworks || [],
@@ -64,13 +78,14 @@ export const useStoreDataStore = create((set, get) => ({
         },
       }));
     } catch (error) {
+      const staticProducts = getActiveStaticProducts();
       set((state) => ({
         stores: {
           ...state.stores,
           [storeKey]: {
             slug: storeKey,
             merchant: null,
-            products: [],
+            products: staticProducts,
             paymentOptions: {
               supportedUsdtNetworks: ["TRC20", "BEP20", "BINANCE"],
               usdtNetworks: [],

@@ -10,6 +10,7 @@ import { createOrder, getOrderStatus, submitUsdtReference } from "../api.js";
 import { useCartStore } from "../stores/cartStore.js";
 import { SINGLE_STORE_KEY, useStoreDataStore } from "../stores/storeDataStore.js";
 import { useLanguage } from "../useLanguage.js";
+import { recordStaticProductSales } from "../utils/staticProductStock.js";
 import {
   Button,
   Input,
@@ -165,6 +166,8 @@ export default function Checkout() {
         paymentMethod: "USDT",
         paymentNetwork: selectedNetwork,
       });
+      // Record sales for static products to track stock
+      recordStaticProductSales(cart.map(({ productId, qty }) => ({ productId, quantity: qty })));
       sessionStorage.setItem(`aether-order-items-${result.orderCode}`, JSON.stringify(cart));
       navigate(`/checkout/${result.orderCode}`, { replace: true });
     } catch (error) {

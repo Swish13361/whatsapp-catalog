@@ -30,6 +30,7 @@ export async function getStorefront(req, res) {
         ...p,
         category: p.category || "Other",
         currency: p.currency || "KES",
+        stock,
         inStock: stock === null || stock > 0,
       })),
     });

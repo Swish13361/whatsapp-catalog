@@ -8,6 +8,8 @@ import {
   updateAdminProduct,
   uploadAdminProductImage,
 } from "../api.js";
+import { getStaticProducts } from "../data/staticProducts.js";
+import { resetStaticProductSales, getStaticProductSold } from "../utils/staticProductStock.js";
 import {
   Button,
   Input,
@@ -53,6 +55,8 @@ const paymentMethodLabel = (order) => {
 const pageClass = "";
 const addProductLink = "flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-bold text-text hover:bg-accent-soft hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 const filterChip = (on) => `inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-bold transition-colors ${on ? "border-accent bg-accent text-accent-on" : "border-line bg-surface text-muted hover:bg-accent-soft hover:text-accent-ink"}`;
+const th = "th-base px-4 py-3 text-left";
+const td = "td-base px-4 py-3";
 
 function LoadingPage({ label }) {
   return (
@@ -72,8 +76,9 @@ export function AdminDashboard() {
     setError("");
     try {
       const [orderResult, productResult] = await Promise.all([getAdminOrders({ page: 1, limit: 6 }), getAdminProducts()]);
+      const staticProducts = getStaticProducts();
       setOrdersResult(orderResult);
-      setProducts(productResult);
+      setProducts(mergeProducts(productResult, staticProducts));
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -84,8 +89,9 @@ export function AdminDashboard() {
     Promise.all([getAdminOrders({ page: 1, limit: 6 }), getAdminProducts()])
       .then(([orderResult, productResult]) => {
         if (active) {
+          const staticProducts = getStaticProducts();
           setOrdersResult(orderResult);
-          setProducts(productResult);
+          setProducts(mergeProducts(productResult, staticProducts));
         }
       })
       .catch((requestError) => {
@@ -323,6 +329,16 @@ export function AdminOrders() {
 
 const blankProduct = { name: "", description: "", category: "", price: "", currency: DEFAULT_CURRENCY, imageUrl: "", stock: "", isActive: true };
 
+function mergeProducts(apiProducts, staticProducts) {
+  const merged = [...apiProducts];
+  for (const staticProduct of staticProducts) {
+    if (!merged.some(p => p._id === staticProduct._id)) {
+      merged.push({ ...staticProduct, isStatic: true });
+    }
+  }
+  return merged;
+}
+
 export function AdminProducts() {
   const navigate = useNavigate();
   const [products, setProducts] = useState(null);
@@ -336,7 +352,9 @@ export function AdminProducts() {
     setLoading(true);
     setError("");
     try {
-      setProducts(await getAdminProducts());
+      const apiProducts = await getAdminProducts();
+      const staticProducts = getStaticProducts();
+      setProducts(mergeProducts(apiProducts, staticProducts));
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -347,7 +365,13 @@ export function AdminProducts() {
   useEffect(() => {
     let active = true;
     getAdminProducts()
-      .then((productList) => { if (active) { setProducts(productList); setError(""); } })
+      .then((productList) => {
+        if (active) {
+          const staticProducts = getStaticProducts();
+          setProducts(mergeProducts(productList, staticProducts));
+          setError("");
+        }
+      })
       .catch((requestError) => { if (active) setError(requestError.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -363,6 +387,10 @@ export function AdminProducts() {
   }, [products, query, tab]);
 
   const toggleProduct = async (product) => {
+    if (product.isStatic) {
+      setActionError("Static products cannot be modified. Edit them in src/data/staticProducts.js");
+      return;
+    }
     setActionError("");
     try {
       await updateAdminProduct(product._id, { isActive: !product.isActive });
@@ -372,12 +400,31 @@ export function AdminProducts() {
     }
   };
 
-  const removeProduct = async (product) => {
-    if (!window.confirm(`Permanently delete “${product.name}”? This can’t be undone.`)) return;
+const removeProduct = async (product) => {
+    if (product.isStatic) {
+      setActionError("Static products cannot be deleted. Remove them from src/data/staticProducts.js");
+      return;
+    }
+    if (!window.confirm(`Permanently delete "${product.name}"? This can't be undone.`)) return;
     setActionError("");
     try {
       await deleteAdminProduct(product._id);
       setProducts((current) => current.filter((entry) => entry._id !== product._id));
+    } catch (requestError) {
+      setActionError(requestError.message);
+    }
+  };
+
+  const resetStaticStock = async (product) => {
+    if (!product.isStatic) return;
+    if (!window.confirm(`Reset stock for "${product.name}"? This will set sold count back to 0.`)) return;
+    setActionError("");
+    try {
+      resetStaticProductSales(product._id);
+      // Refresh products to show updated stock
+      const apiProducts = await getAdminProducts();
+      const staticProducts = getStaticProducts();
+      setProducts(mergeProducts(apiProducts, staticProducts));
     } catch (requestError) {
       setActionError(requestError.message);
     }
@@ -427,37 +474,56 @@ export function AdminProducts() {
         ) : (
           <div className="overflow-x-auto border border-line rounded-lg shadow-sm">
             <table className="border-collapse w-full text-left min-w-full">
-              <thead>
+<thead>
                 <tr className="bg-surface/50">
                   <th className={th}>Product</th>
                   <th className={th}>Price</th>
                   <th className={th}>Stock</th>
+                  <th className={th}>Sold</th>
                   <th className={th}>Status</th>
+                  <th className={th}>Type</th>
                   <th className={th}><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody>
-                {visibleProducts.map((product) => (
-                  <tr key={product._id}>
-                    <td className={`${td} text-sm text-text ${product.isActive ? "" : "opacity-60"}`}>
-                      <div className="flex items-center gap-3">
-                        <div className="flex shrink-0 items-center justify-center w-8 h-8 rounded-lg bg-line text-muted text-xs">{product.name.slice(0, 1).toUpperCase()}</div>
-                        <span className="font-medium">{product.name}</span>
-                      </div>
-                      <p className="text-xs text-muted line-clamp-1">{product.description || "No description added yet."}</p>
-                    </td>
-                    <td className={`${td} text-sm font-bold text-text`}><PriceTag amount={product.price} currency={product.currency || DEFAULT_CURRENCY} /></td>
-                    <td className={`${td} text-sm text-muted`}>{product.stock == null ? "Unlimited" : product.stock === 0 ? "Out of stock" : `${product.stock} in stock`}</td>
-                    <td className={td}><StatusBadge status={product.isActive ? "active" : "inactive"} /></td>
-                    <td className={td}>
-                      <div className="flex items-center gap-3">
-                        <Link to={`/admin/products/${product._id}`} className="text-xs font-bold text-accent hover:text-accent-hover underline underline-offset-2">Edit</Link>
-                        <button type="button" onClick={() => toggleProduct(product)} className="text-xs font-bold text-muted hover:text-accent transition-colors">{product.isActive ? "Hide" : "Show"}</button>
-                        <button type="button" onClick={() => removeProduct(product)} className="text-xs font-bold text-danger hover:underline underline-offset-2">Delete</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {visibleProducts.map((product) => {
+                  const soldCount = product.isStatic ? getStaticProductSold(product._id) : (product.originalStock !== undefined ? product.originalStock - (product.stock || 0) : 0);
+                  const showSold = product.isStatic || (product.originalStock !== undefined && product.originalStock !== null);
+                  return (
+                    <tr key={product._id}>
+                      <td className={`${td} text-sm text-text ${product.isActive ? "" : "opacity-60"}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="flex shrink-0 items-center justify-center w-8 h-8 rounded-lg bg-line text-muted text-xs">{product.name.slice(0, 1).toUpperCase()}</div>
+                          <span className="font-medium">{product.name}</span>
+                        </div>
+                        <p className="text-xs text-muted line-clamp-1">{product.description || "No description added yet."}</p>
+                      </td>
+                      <td className={`${td} text-sm font-bold text-text`}><PriceTag amount={product.price} currency={product.currency || DEFAULT_CURRENCY} /></td>
+                      <td className={`${td} text-sm text-muted`}>{product.stock == null ? "Unlimited" : product.stock === 0 ? "Out of stock" : `${product.stock} in stock`}</td>
+                      <td className={`${td} text-sm text-muted`}>{showSold ? soldCount : "—"}</td>
+                      <td className={td}><StatusBadge status={product.isActive ? "active" : "inactive"} /></td>
+                      <td className={td}>
+                        {product.isStatic && <StatusBadge status="info" label="Static" />}
+                      </td>
+                      <td className={td}>
+                        <div className="flex items-center gap-3">
+                          {product.isStatic ? (
+                            <>
+                              <button type="button" onClick={() => resetStaticStock(product)} className="text-xs font-bold text-accent hover:text-accent-hover underline underline-offset-2">Reset Stock</button>
+                              <span className="text-xs text-muted">Managed in code</span>
+                            </>
+                          ) : (
+                            <>
+                              <Link to={`/admin/products/${product._id}`} className="text-xs font-bold text-accent hover:text-accent-hover underline underline-offset-2">Edit</Link>
+                              <button type="button" onClick={() => toggleProduct(product)} className="text-xs font-bold text-muted hover:text-accent transition-colors">{product.isActive ? "Hide" : "Show"}</button>
+                              <button type="button" onClick={() => removeProduct(product)} className="text-xs font-bold text-danger hover:underline underline-offset-2">Delete</button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -622,10 +688,21 @@ export function AdminProductEditor() {
     );
   }
   if (!isNew && product === undefined) return <LoadingPage label="Loading product…" />;
-  if (!isNew && product === null) {
+if (!isNew && product === null) {
     return (
       <main className={pageClass}>
         <EmptyState title="Product not found" description="It may have been deleted." action={<Button onClick={back}>Back to products</Button>} />
+      </main>
+    );
+  }
+  if (!isNew && product.isStatic) {
+    return (
+      <main className={pageClass}>
+        <EmptyState
+          title="Static product"
+          description="This product is defined in src/data/staticProducts.js and cannot be edited here. Edit the source file to make changes."
+          action={<Button onClick={back}>Back to products</Button>}
+        />
       </main>
     );
   }
