@@ -4,7 +4,7 @@ import { findSingleStore } from "../services/singleStore.js";
 
 export async function getStorefront(req, res) {
   try {
-    const { merchant, status, error } = await findSingleStore();
+    const { merchant, status, error } = await findSingleStore(req.params.legacySlug || undefined);
     if (!merchant) return res.status(status).json({ error });
 
     const products = await Product.find({ merchant: merchant._id, isActive: true })

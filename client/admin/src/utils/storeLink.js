@@ -1,10 +1,5 @@
-const defaultStorefrontUrl = typeof window !== "undefined" && window.location.hostname === "localhost"
-  ? "http://localhost:5174"
-  : "https://shop.jchpro.com";
-const storefrontBase = (import.meta.env.VITE_STOREFRONT_URL || defaultStorefrontUrl).replace(/\/+$/, "");
+const storefrontBase = (import.meta.env.VITE_STOREFRONT_URL || (typeof window !== "undefined" ? window.location.origin : "")).replace(/\/+$/, "");
 
-export function getStoreLink() {
-  return storefrontBase;
+export function getStoreLink(slug) {
+  return slug ? `${storefrontBase}/${slug}` : storefrontBase;
 }
-
-

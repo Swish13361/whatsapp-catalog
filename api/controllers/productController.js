@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Product from "../models/product.js";
+import { uploadImage, deleteImage } from "../services/appwrite.js";
 
 // Only these fields can ever be set from the request body
 function cleanProduct(body, partial = false) {
@@ -47,10 +48,7 @@ function cleanProduct(body, partial = false) {
   }
 
   if (body.imageUrl !== undefined) {
-    if (typeof body.imageUrl !== "string" || (body.imageUrl && !body.imageUrl.startsWith("https://"))) {
-      return { error: "Image link must start with https://" };
-    }
-    data.imageUrl = body.imageUrl;
+    data.imageUrl = body.imageUrl || null;
   }
 
   if (body.stock !== undefined) {
@@ -113,12 +111,37 @@ export async function updateProduct(req, res) {
   }
 }
 
+export async function uploadProductImage(req, res) {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: "Invalid product id" });
+    if (!req.file) return res.status(400).json({ error: "No image file provided" });
+
+    const product = await Product.findOne({ _id: req.params.id, merchant: req.merchant._id });
+    if (!product) return res.status(404).json({ error: "Product not found" });
+
+    const { fileId, imageUrl } = await uploadImage(req.file.buffer, req.file.originalname, req.file.mimetype);
+
+    if (product.imageFileId) await deleteImage(product.imageFileId);
+
+    product.imageFileId = fileId;
+    product.imageUrl = imageUrl;
+    await product.save();
+
+    res.json({ imageUrl, imageFileId: fileId });
+  } catch (err) {
+    console.error("Upload product image error:", err.message);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+}
+
 export async function deleteProduct(req, res) {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: "Invalid product id" });
 
     const product = await Product.findOneAndDelete({ _id: req.params.id, merchant: req.merchant._id });
     if (!product) return res.status(404).json({ error: "Product not found" });
+
+    if (product.imageFileId) await deleteImage(product.imageFileId);
 
     res.json({ deleted: true });
   } catch (err) {

@@ -1,7 +1,8 @@
 import Merchant from "../models/merchant.js";
 
-export async function findSingleStore() {
-  const merchants = await Merchant.find({ isActive: true })
+export async function findSingleStore(slug) {
+  const query = slug ? { slug, isActive: true } : { isActive: true };
+  const merchants = await Merchant.find(query)
     .select("businessName slug whatsappNumber")
     .limit(2);
 

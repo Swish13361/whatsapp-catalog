@@ -6,6 +6,7 @@ import {
   getAdminOrders,
   getAdminProducts,
   updateAdminProduct,
+  uploadAdminProductImage,
 } from "../api.js";
 import {
   Button,
@@ -467,7 +468,7 @@ export function AdminProducts() {
 }
 
 export function ProductForm({ product, onClose, onSaved }) {
-  const [values, setValues] = useState(() => product ? {
+const [values, setValues] = useState(() => product ? {
     name: product.name,
     description: product.description || "",
     category: product.category || "",
@@ -479,10 +480,22 @@ export function ProductForm({ product, onClose, onSaved }) {
   } : blankProduct);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(product?.imageUrl || null);
 
   const update = (event) => {
     const { name, value, type, checked } = event.target;
     setValues((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    setSelectedFile(file);
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(product?.imageUrl || null);
+    }
   };
 
   const submit = async (event) => {
@@ -493,12 +506,10 @@ export function ProductForm({ product, onClose, onSaved }) {
     const price = Number(values.price);
     const stockText = values.stock.trim();
     const stock = stockText === "" ? null : Number(stockText);
-    const imageUrl = values.imageUrl.trim();
 
     if (!name) return setError("Enter a product name.");
     if (values.price.trim() === "" || !Number.isFinite(price) || price < 0) return setError("Enter a valid price.");
     if (stock !== null && (!Number.isInteger(stock) || stock < 0)) return setError("Stock must be a whole number, or blank for unlimited.");
-    if (imageUrl && !imageUrl.startsWith("https://")) return setError("The image link must start with https://");
 
     setBusy(true);
     const payload = {
@@ -507,13 +518,23 @@ export function ProductForm({ product, onClose, onSaved }) {
       category: values.category.trim(),
       price,
       currency: values.currency,
-      imageUrl,
+      imageUrl: values.imageUrl.trim(),
       stock,
       isActive: values.isActive,
     };
     try {
-      if (product) await updateAdminProduct(product._id, payload);
-      else await createAdminProduct(payload);
+      let savedProduct;
+      if (product) {
+        savedProduct = await updateAdminProduct(product._id, payload);
+      } else {
+        savedProduct = await createAdminProduct(payload);
+      }
+
+      if (selectedFile) {
+        const result = await uploadAdminProductImage(savedProduct._id, selectedFile);
+        setImagePreview(result.imageUrl);
+      }
+
       await onSaved();
     } catch (requestError) {
       setError(requestError.message);
@@ -552,8 +573,13 @@ export function ProductForm({ product, onClose, onSaved }) {
           <Input id="pf-stock" className="input-base" name="stock" type="number" value={values.stock} onChange={update} min="0" step="1" placeholder="Unlimited" />
         </div>
         <div className="form-field form-field-wide">
-          <label htmlFor="pf-image" className="label-base">Image URL <span className="font-normal">Optional · HTTPS link</span></label>
-          <Input id="pf-image" className="input-base" name="imageUrl" type="url" value={values.imageUrl} onChange={update} placeholder="https://…" />
+          <label htmlFor="pf-image" className="label-base">Product image <span className="font-normal">Optional · JPG/PNG up to 5MB</span></label>
+          <div className="flex flex-col gap-2">
+            <input id="pf-image" type="file" accept="image/*" onChange={handleFileChange} disabled={busy} />
+            {imagePreview && (
+              <img src={imagePreview} alt="Product preview" className="w-32 h-32 object-cover rounded-lg border border-line" />
+            )}
+          </div>
         </div>
         <div className="form-field form-field-wide">
           <Checkbox checked={values.isActive} onChange={() => setValues((current) => ({ ...current, isActive: !current.isActive }))} label={<span><strong>Show on storefront</strong> <span className="text-xs font-normal text-muted">Customers can see and order this product.</span></span>} />

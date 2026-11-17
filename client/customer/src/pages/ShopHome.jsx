@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useCartStore } from "../stores/cartStore.js";
 import { SINGLE_STORE_KEY, useStoreDataStore } from "../stores/storeDataStore.js";
 import { useAuthStore } from "../stores/authStore.js";
@@ -270,6 +270,7 @@ function CartSidebar({ cartItems, products, cartCount, cartTotal, cartCurrency, 
 export default function ShopHome() {
   const { language, t } = useLanguage();
   const navigate = useNavigate();
+  const { slug } = useParams();
   const authStatus = useAuthStore((state) => state.status);
   const authInitialize = useAuthStore((state) => state.initialize);
   const storeResult = useStoreDataStore((state) => state.stores[SINGLE_STORE_KEY]);
@@ -280,17 +281,18 @@ export default function ShopHome() {
   const changeCartQuantity = useCartStore((state) => state.changeQuantity);
   const clearCart = useCartStore((state) => state.clearCart);
   const { toast } = useToast();
-  const cart = cartSlug === SINGLE_STORE_KEY ? storedCart : [];
+  const activeSlug = slug || SINGLE_STORE_KEY;
+  const cart = cartSlug === activeSlug ? storedCart : [];
   const [category, setCategory] = useState("All");
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
   useEffect(() => {
-    console.log('[ShopHome] cart state:', { cartSlug, storedCartLength: storedCart?.length, cartLength: cart?.length, SINGLE_STORE_KEY });
-  }, [cartSlug, storedCart, cart]);
+    console.log('[ShopHome] cart state:', { cartSlug, storedCartLength: storedCart?.length, cartLength: cart?.length, activeSlug });
+  }, [cartSlug, storedCart, cart, activeSlug]);
 
   useEffect(() => {
-    void fetchStore();
-  }, [fetchStore]);
+    void fetchStore({ slug });
+  }, [fetchStore, slug]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -338,7 +340,7 @@ useEffect(() => {
     if (status !== "ready") return;
     const staleIds = cart.filter((item) => !products.some((p) => p._id === item.productId));
     if (staleIds.length > 0) {
-      clearCart(SINGLE_STORE_KEY);
+      clearCart(activeSlug);
     }
   }, [products, cart, clearCart, status]);
 
@@ -353,7 +355,7 @@ useEffect(() => {
         sessionStorage.removeItem("pendingBuyItem");
         const product = products.find((p) => p._id === pendingId);
         if (product) {
-          addItem(SINGLE_STORE_KEY, product);
+          addItem(activeSlug, product);
           setTimeout(() => {
             toast(`${product.name} ${t("addedToBag")}`, "success");
           }, 0);
@@ -372,12 +374,12 @@ useEffect(() => {
         toast(t("clearBagToSwitchCurrency"), "warning");
         return;
       }
-      addItem(SINGLE_STORE_KEY, product);
+      addItem(activeSlug, product);
       toast(`${product.name} ${t("addedToBag")}`, "success");
     } else {
-      changeCartQuantity(SINGLE_STORE_KEY, product, amount);
+      changeCartQuantity(activeSlug, product, amount);
     }
-  }, [addItem, changeCartQuantity, cartCurrencies, toast, t, navigate]);
+  }, [addItem, changeCartQuantity, cartCurrencies, toast, t, navigate, activeSlug]);
 
   const handleQuickView = useCallback((product) => {
     setQuickViewProduct(product);
@@ -526,7 +528,7 @@ return (
               cartTotal={cartTotal}
               cartCurrency={cartCurrency}
               onChangeQty={changeQuantity}
-              onClearCart={() => clearCart(SINGLE_STORE_KEY)}
+              onClearCart={() => clearCart(activeSlug)}
               navigate={navigate}
               t={t}
               language={language}

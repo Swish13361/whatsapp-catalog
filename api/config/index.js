@@ -51,6 +51,12 @@ bankTransfer: {
   bankName: process.env.BANK_NAME || "",
   routing: process.env.BANK_ROUTING || "",
 },
+appwrite: {
+  endpoint: process.env.APPWRITE_ENDPOINT || "",
+  projectId: process.env.APPWRITE_PROJECT_ID || "",
+  apiKey: process.env.APPWRITE_API_KEY || "",
+  bucketId: process.env.APPWRITE_BUCKET_ID || "",
+},
 };
 
 export default config;

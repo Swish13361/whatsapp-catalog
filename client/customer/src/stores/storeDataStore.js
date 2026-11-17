@@ -6,8 +6,8 @@ export const SINGLE_STORE_KEY = "shop";
 
 export const useStoreDataStore = create((set, get) => ({
   stores: {},
-  fetchStore: async ({ force = false } = {}) => {
-    const storeKey = SINGLE_STORE_KEY;
+  fetchStore: async ({ slug, force = false } = {}) => {
+    const storeKey = slug || SINGLE_STORE_KEY;
     const cached = get().stores[storeKey];
     if (cached?.status === "loading") return;
     if (
@@ -40,7 +40,7 @@ export const useStoreDataStore = create((set, get) => ({
     }));
 
     try {
-      const data = await getStore();
+      const data = await getStore(slug);
       if (!data.store) throw new Error("Store data was missing from the response.");
       set((state) => ({
         stores: {
@@ -88,4 +88,3 @@ export const useStoreDataStore = create((set, get) => ({
     }
   },
 }));
-

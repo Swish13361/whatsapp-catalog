@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema(
     price: { type: Number, required: true, min: 0 },
     currency: { type: String, enum: ["USD", "KES"] },
     imageUrl: String,
+    imageFileId: String,
     stock: { type: Number, default: null, min: 0 }, // null = unlimited
     isActive: { type: Boolean, default: true },
   },

@@ -43,7 +43,7 @@ async function adminRequest(path, options = {}) {
   return body;
 }
 
-export const getStore = () => request("/store");
+export const getStore = (slug) => request(`/store${slug ? `/${slug}` : ""}`);
 
 export const createOrder = (orderData) =>
   request("/store/orders", {
@@ -93,6 +93,15 @@ export const updateAdminProduct = (id, changes) =>
 
 export const deleteAdminProduct = (id) =>
   adminRequest(`/products/${encodeURIComponent(id)}`, { method: "DELETE" });
+
+export const uploadAdminProductImage = (id, file) => {
+  const formData = new FormData();
+  formData.append("image", file);
+  return adminRequest(`/products/${encodeURIComponent(id)}/image`, {
+    method: "POST",
+    body: formData,
+  });
+};
 
 export const getAdminOrders = ({ status, paymentStatus, page = 1, limit = 20 } = {}) => {
   const query = new URLSearchParams({ page: String(page), limit: String(limit) });

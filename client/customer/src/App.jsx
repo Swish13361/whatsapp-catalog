@@ -51,7 +51,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<ShopHome />} />
           <Route path="/store" element={<Navigate to="/" replace />} />
-          <Route path="/store/:legacySlug" element={<Navigate to="/" replace />} />
+          <Route path="/store/:slug" element={<ShopHome />} />
           <Route path="/order" element={<Navigate to="/checkout" replace />} />
           <Route path="/order/:legacySlug" element={<Navigate to="/checkout" replace />} />
           <Route path="/item/:id" element={<ItemPage />} />
@@ -85,7 +85,7 @@ export default function App() {
             <Route path="inventory" element={<InventoryPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
-          <Route path="/:legacySlug" element={<Navigate to="/" replace />} />
+          <Route path="/:slug" element={<ShopHome />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ToastProvider>
