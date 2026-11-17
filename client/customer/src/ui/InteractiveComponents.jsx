@@ -80,8 +80,14 @@ export function ImageZoom({ src, alt, className }) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const imageRef = useRef(null);
+
+  const PLACEHOLDER =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect fill='%23e5e7eb' width='200' height='200'/%3E%3Cpath d='M60 60h80v80H60z' fill='%239ca3af'/%3E%3Ccircle cx='100' cy='100' r='8' fill='%239ca3af'/%3E%3C/svg%3E";
+
+  const imageSrc = loadError || !src ? PLACEHOLDER : src;
 
   const handleWheel = (event) => {
     if (!isOpen) return;
@@ -140,11 +146,12 @@ export function ImageZoom({ src, alt, className }) {
     <div className="relative">
       <img
         ref={imageRef}
-        src={src}
+        src={imageSrc}
         alt={alt}
         loading="lazy"
         className={`cursor-zoom-in transition-[color,background-color] duration-150 ${className || ""}`}
         onClick={() => setIsOpen(true)}
+        onError={() => setLoadError(true)}
       />
       {isOpen && (
         <div
@@ -168,7 +175,7 @@ export function ImageZoom({ src, alt, className }) {
             onMouseDown={handleMouseDown}
             onClick={(e) => e.stopPropagation()}
           >
-            <img src={src} alt={alt} className="max-h-[90vh] max-w-[90vw] object-contain" />
+            <img src={imageSrc} alt={alt} className="max-h-[90vh] max-w-[90vw] object-contain" onError={() => setLoadError(true)} />
           </div>
           <button
             type="button"
