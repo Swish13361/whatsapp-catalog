@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: aether-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /auth/me
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: USDT_TRC20_ADDRESS
+        sync: false
+      - key: USDT_BEP20_ADDRESS
+        sync: false
+      - key: USDT_BINANCE_ADDRESS
+        sync: false
+      - key: MPESA_ENV
+        sync: false
+      - key: MPESA_CONSUMER_KEY
+        sync: false
+      - key: MPESA_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_SHORTCODE
+        sync: false
+      - key: MPESA_PASSKEY
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: STK_CALLBACK_SECRET
+        sync: false
+      - key: MPESA_SKIP_VERIFY
+        sync: false
