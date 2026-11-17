@@ -10,14 +10,11 @@ const merchantSchema = new mongoose.Schema(
       lowercase: true,
       match: /^[a-z0-9-]{3,30}$/,
     },
-    whatsappNumber: {
-      type: String,
-      required: true,
-      match: /^254(7|1)\d{8}$/,
-    },
+    whatsappNumber: { type: String, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
     isActive: { type: Boolean, default: true },
+    role: { type: String, default: "admin" },
   },
   { timestamps: true }
 );

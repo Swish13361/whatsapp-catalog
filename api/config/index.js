@@ -1,5 +1,20 @@
 import "dotenv/config";          // loads .env into process.env
 
+const usdtWallets = {
+  TRC20: process.env.USDT_TRC20_ADDRESS?.trim() || "",
+  BEP20: process.env.USDT_BEP20_ADDRESS?.trim() || "",
+  BINANCE: process.env.USDT_BINANCE_ADDRESS?.trim() || "",
+};
+
+export function isUsdtWalletConfigured(network) {
+  const address = usdtWallets[network];
+  if (!address) return false;
+  if (network === "TRC20") return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address);
+  if (network === "BEP20") return /^0x[a-fA-F0-9]{40}$/.test(address);
+  if (network === "BINANCE") return /^0x[a-fA-F0-9]{40}$/.test(address);
+  return false;
+}
+
 const config = {
   port: process.env.PORT || 5001,    // use 5001 if PORT isn't set
   mongoUri: process.env.MONGO_URI,
@@ -25,6 +40,17 @@ mpesaReady: Boolean(
     process.env.PUBLIC_BASE_URL &&
     process.env.STK_CALLBACK_SECRET
 ),
+usdtWallets,
+alipay: {
+  accountId: process.env.ALIPAY_ACCOUNT_ID || "",
+  accountName: process.env.ALIPAY_ACCOUNT_NAME || "",
+},
+bankTransfer: {
+  accountName: process.env.BANK_ACCOUNT_NAME || "",
+  accountNumber: process.env.BANK_ACCOUNT_NUMBER || "",
+  bankName: process.env.BANK_NAME || "",
+  routing: process.env.BANK_ROUTING || "",
+},
 };
 
 export default config;

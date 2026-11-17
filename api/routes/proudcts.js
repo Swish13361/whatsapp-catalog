@@ -1,5 +1,5 @@
 import express from "express";
-import requireAuth from "../middleware/auth.js";
+import { requireAdmin } from "../middleware/auth.js";
 import {
   createProduct,
   listMyProducts,
@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-router.use(requireAuth);
+router.use(requireAdmin);
 
 router.post("/", createProduct);
 router.get("/", listMyProducts);

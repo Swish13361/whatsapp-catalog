@@ -1,17 +1,14 @@
-import Merchant from "../models/merchant.js";
 import Product from "../models/product.js";
+import config, { isUsdtWalletConfigured } from "../config/index.js";
+import { findSingleStore } from "../services/singleStore.js";
 
 export async function getStorefront(req, res) {
   try {
-    const merchant = await Merchant.findOne({
-      slug: req.params.slug.toLowerCase(),
-      isActive: true,
-    }).select("businessName slug whatsappNumber");
-
-    if (!merchant) return res.status(404).json({ error: "Store not found" });
+    const { merchant, status, error } = await findSingleStore();
+    if (!merchant) return res.status(status).json({ error });
 
     const products = await Product.find({ merchant: merchant._id, isActive: true })
-      .select("name description price imageUrl stock")
+      .select("_id name description category price currency imageUrl stock")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -21,8 +18,18 @@ export async function getStorefront(req, res) {
         slug: merchant.slug,
         whatsappNumber: merchant.whatsappNumber,
       },
+      paymentOptions: {
+        supportedUsdtNetworks: ["TRC20", "BEP20", "BINANCE"],
+        usdtNetworks: Object.keys(config.usdtWallets).filter(isUsdtWalletConfigured),
+        alipayEnabled: true,
+        alipayAccount: config.alipay.accountId,
+        bankTransferEnabled: true,
+        bankDetails: config.bankTransfer,
+      },
       products: products.map(({ stock, ...p }) => ({
         ...p,
+        category: p.category || "Other",
+        currency: p.currency || "KES",
         inStock: stock === null || stock > 0,
       })),
     });

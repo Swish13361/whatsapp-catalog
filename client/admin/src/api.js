@@ -26,23 +26,20 @@ async function request(path, options) {
   return body;
 }
 
-export const adminLogin = (email, password) => request("/auth/login", {
+export const adminLogin = (email, password) => request("/auth/admin/login", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ email, password }),
 });
 
-export const adminRegister = (businessName, slug, whatsappNumber, email, password) =>
-  request("/auth/register", {
+export const adminRegister = (businessName, email, password) =>
+  request("/auth/admin/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ businessName, slug, whatsappNumber, email, password }),
+  body: JSON.stringify({ businessName, email, password }),
 });
 
-export const adminCheckSlugAvailability = (slug) =>
-request(`/auth/slug/${encodeURIComponent(slug)}/available`);
-
-export const adminMe = () => request("/auth/me");
+export const adminMe = () => request("/auth/admin/me");
 
 export const adminProducts = () => request("/products");
 
@@ -68,6 +65,7 @@ export const adminDeleteProduct = (id) =>
 export const adminOrders = (filters = {}) => {
   const query = new URLSearchParams();
   if (filters.status) query.set("status", filters.status);
+  if (filters.paymentStatus) query.set("paymentStatus", filters.paymentStatus);
   const queryString = query.toString();
   const suffix = queryString ? `?${queryString}` : "";
   return request(`/order${suffix}`);
@@ -88,3 +86,4 @@ export const adminMarkPaid = (id) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({}),
   });
+

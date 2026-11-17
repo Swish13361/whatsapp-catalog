@@ -5,37 +5,48 @@ const normalizeSlug = (slug) => String(slug || "").toLowerCase();
 
 export const useCartStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       slug: null,
       items: [],
       addItem: (slug, product) => set((state) => {
+        console.log('[cartStore] addItem called:', { slug, productId: product._id, currentSlug: state.slug, currentItems: state.items.length });
         const storeSlug = normalizeSlug(slug);
         if (product.inStock === false) return state;
 
         const items = state.slug === storeSlug ? state.items : [];
+        const currency = product.currency || "KES";
+        if (items.some((item) => (item.currency || "KES") !== currency)) {
+          console.log('[cartStore] mixed currency blocked');
+          return state;
+        }
         const existing = items.find((item) => item.productId === product._id);
         if (existing?.qty >= 10) return state;
 
+        let newState;
         if (existing) {
-          return {
+          newState = {
             slug: storeSlug,
             items: items.map((item) =>
-              item.productId === product._id ? { ...item, qty: item.qty + 1 } : item,
+              item.productId === product._id ? { ...item, currency, qty: item.qty + 1 } : item,
             ),
           };
+        } else {
+          newState = {
+            slug: storeSlug,
+            items: [...items, {
+              productId: product._id,
+              name: product.name,
+              price: product.price,
+              currency,
+              qty: 1,
+            }],
+          };
         }
-
-        return {
-          slug: storeSlug,
-          items: [...items, {
-            productId: product._id,
-            name: product.name,
-            price: product.price,
-            qty: 1,
-          }],
-        };
+        console.log('[cartStore] new state:', newState);
+        return newState;
       }),
       changeQuantity: (slug, product, amount) => set((state) => {
+        console.log('[cartStore] changeQuantity called:', { slug, productId: product._id, amount, currentSlug: state.slug });
         const storeSlug = normalizeSlug(slug);
         const items = state.slug === storeSlug ? state.items : [];
         const existing = items.find((item) => item.productId === product._id);
@@ -52,7 +63,7 @@ export const useCartStore = create(
           return {
             slug: storeSlug,
             items: items.map((item) =>
-              item.productId === product._id ? { ...item, qty: nextQuantity } : item,
+              item.productId === product._id ? { ...item, currency: product.currency || "KES", qty: nextQuantity } : item,
             ),
           };
         }
@@ -64,6 +75,7 @@ export const useCartStore = create(
             productId: product._id,
             name: product.name,
             price: product.price,
+            currency: product.currency || "KES",
             qty: nextQuantity,
           }],
         };
@@ -78,3 +90,4 @@ export const useCartStore = create(
     },
   ),
 );
+

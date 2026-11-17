@@ -15,11 +15,35 @@ function cleanProduct(body, partial = false) {
     data.description = body.description.trim();
   }
 
-  if (!partial || body.price !== undefined) {
-    if (typeof body.price !== "number" || !Number.isFinite(body.price) || body.price < 0 || body.price > 10000000) {
-      return { error: "Price must be a number between 0 and 10,000,000" };
+  if (!partial && body.category === undefined) {
+    data.category = "Other";
+  } else if (body.category !== undefined) {
+    if (typeof body.category !== "string" || body.category.trim().length > 40) {
+      return { error: "Category must be a text value up to 40 characters" };
     }
-    data.price = Math.round(body.price);
+    data.category = body.category.trim() || "Other";
+  }
+
+  if (!partial || body.price !== undefined) {
+    if (
+      typeof body.price !== "number" ||
+      !Number.isFinite(body.price) ||
+      body.price < 0 ||
+      body.price > 10000000 ||
+      Math.abs(Math.round(body.price * 100) - body.price * 100) > 1e-8
+    ) {
+      return { error: "Price must be a number with up to two decimals between 0 and 10,000,000" };
+    }
+    data.price = Math.round(body.price * 100) / 100;
+  }
+
+  if (!partial && body.currency === undefined) {
+    data.currency = "USD";
+  } else if (body.currency !== undefined) {
+    if (body.currency !== "USD" && body.currency !== "KES") {
+      return { error: "Currency must be USD or KES" };
+    }
+    data.currency = body.currency;
   }
 
   if (body.imageUrl !== undefined) {

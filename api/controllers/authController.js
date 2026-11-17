@@ -1,18 +1,17 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import config from "../config/index.js";
+import User from "../models/user.js";
 import Merchant from "../models/merchant.js";
-import { formatPhone } from "../utils/phone.js";
 import { isValidSlug, RESERVED_SLUGS } from "../constants/reservedSlugs.js";
 
-const signToken = (m) => jwt.sign({ id: m._id }, config.jwtSecret, { expiresIn: "7d" });
+const signToken = (id) => jwt.sign({ id }, config.jwtSecret, { expiresIn: "7d" });
 
-const publicMerchant = (m) => ({
-  id: m._id,
-  businessName: m.businessName,
-  slug: m.slug,
-  whatsappNumber: m.whatsappNumber,
-  email: m.email,
+const publicUser = (u) => ({
+  id: u._id,
+  name: u.name,
+  email: u.email,
+  role: u.role,
 });
 
 const allStrings = (...vals) => vals.every((v) => typeof v === "string" && v.trim());
@@ -23,70 +22,70 @@ function ensureAuthConfigured(res) {
   return false;
 }
 
-export async function register(req, res) {
+async function createStoreSlug(name) {
+  const normalized = name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 30);
+  const base = isValidSlug(normalized) && !RESERVED_SLUGS.has(normalized)
+    ? normalized
+    : "shop";
+
+  for (let suffix = 1; suffix <= 100; suffix += 1) {
+    const tail = suffix === 1 ? "" : `-${suffix}`;
+    const slug = `${base.slice(0, 30 - tail.length)}${tail}`;
+    if (!await Merchant.exists({ slug })) return slug;
+  }
+
+  throw new Error("Unable to generate a unique store link");
+}
+
+// Customer register
+export async function customerRegister(req, res) {
   if (!ensureAuthConfigured(res)) return;
 
   try {
-    const { businessName, slug, whatsappNumber, email, password } = req.body;
-    if (!allStrings(businessName, slug, whatsappNumber, email, password)) {
+    const { name, email, password } = req.body;
+    if (!allStrings(name, email, password)) {
       return res.status(400).json({ error: "All fields are required" });
     }
-    if (!isValidSlug(slug)) {
-      return res.status(400).json({ error: "Store link must be 3 to 30 lowercase letters, numbers, or dashes" });
+
+    if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*\.\w{2,}$/.test(email)) {
+      return res.status(400).json({ error: "Please add a valid email" });
     }
-    if (RESERVED_SLUGS.has(slug)) {
-      return res.status(400).json({ error: "That store link is reserved. Choose another" });
-    }
+
     if (password.length < 8) {
       return res.status(400).json({ error: "Password must be at least 8 characters" });
     }
 
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+    if (existingUser) {
+      return res.status(409).json({ error: "Email already taken" });
+    }
+
     const passwordHash = await bcrypt.hash(password, 12);
-    const merchant = await Merchant.create({
-      businessName,
-      slug,
-      whatsappNumber: formatPhone(whatsappNumber),
-      email,
-      passwordHash,
+    const user = await User.create({
+      name,
+      email: email.toLowerCase().trim(),
+      password: passwordHash,
+      role: "user",
     });
 
-    res.status(201).json({ token: signToken(merchant), merchant: publicMerchant(merchant) });
+    res.status(201).json({
+      token: signToken(user._id),
+      user: publicUser(user),
+    });
   } catch (err) {
-    if (err.code === 11000) {
-      return res.status(409).json({ error: "Email or store link already taken" });
-    }
-    if (err.name === "ValidationError" || err.message === "Invalid Kenyan phone number") {
-      return res.status(400).json({
-        error: "Please check your details (store link: 3-30 letters, numbers or dashes; valid Kenyan phone)",
-      });
-    }
-    console.error("Register error:", err.message);
+    console.error("Customer register error:", err.message);
     res.status(500).json({ error: "Something went wrong" });
   }
 }
 
-export async function checkSlugAvailability(req, res) {
-  const { slug } = req.params;
-
-  if (!isValidSlug(slug)) {
-    return res.json({ available: false, reason: "invalid" });
-  }
-  if (RESERVED_SLUGS.has(slug)) {
-    return res.json({ available: false, reason: "reserved" });
-  }
-
-  try {
-    const taken = await Merchant.exists({ slug });
-    return res.json(taken
-      ? { available: false, reason: "taken" }
-      : { available: true });
-  } catch (err) {
-    console.error("Slug availability error:", err.message);
-    return res.status(500).json({ error: "Could not check store link right now" });
-  }
-}
-
-export async function login(req, res) {
+// Customer login
+export async function customerLogin(req, res) {
   if (!ensureAuthConfigured(res)) return;
 
   try {
@@ -95,19 +94,133 @@ export async function login(req, res) {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    const merchant = await Merchant.findOne({ email: email.toLowerCase().trim() });
-    const ok = merchant && (await bcrypt.compare(password, merchant.passwordHash));
-    if (!ok || !merchant.isActive) {
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+password");
+    const ok = user && (await bcrypt.compare(password, user.passwordHash));
+    if (!ok) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    res.json({ token: signToken(merchant), merchant: publicMerchant(merchant) });
+    res.json({
+      token: signToken(user._id),
+      user: publicUser(user),
+    });
   } catch (err) {
-    console.error("Login error:", err.message);
+    console.error("Customer login error:", err.message);
     res.status(500).json({ error: "Something went wrong" });
   }
 }
 
-export function me(req, res) {
-  res.json(publicMerchant(req.merchant)); 
+// Admin register
+export async function adminRegister(req, res) {
+  if (!ensureAuthConfigured(res)) return;
+
+  try {
+    const { businessName, email, password } = req.body;
+    if (!allStrings(businessName, email, password)) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*\.\w{2,}$/.test(email)) {
+      return res.status(400).json({ error: "Please add a valid email" });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
+
+    const existingMerchant = await Merchant.findOne({ email: email.toLowerCase().trim() });
+    if (existingMerchant) {
+      return res.status(409).json({ error: "Email already taken" });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    const slug = await createStoreSlug(businessName.trim());
+    const merchant = await Merchant.create({
+      businessName: businessName.trim(),
+      slug,
+      email: email.toLowerCase().trim(),
+      passwordHash,
+      role: "admin",
+    });
+
+    res.status(201).json({
+      token: signToken(merchant._id),
+      merchant: {
+        id: merchant._id,
+        businessName: merchant.businessName,
+        slug: merchant.slug,
+      },
+    });
+  } catch (err) {
+    console.error("Admin register error:", err.message);
+    if (err.name === "ValidationError") {
+      return res.status(400).json({ error: "Please check your details and try again" });
+    }
+    if (err.code === 11000) {
+      return res.status(409).json({ error: "Email is already in use" });
+    }
+    res.status(500).json({ error: "Something went wrong" });
+  }
 }
+
+// Admin login
+export async function adminLogin(req, res) {
+  if (!ensureAuthConfigured(res)) return;
+
+  try {
+    const { email, password } = req.body;
+    if (!allStrings(email, password)) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const merchant = await Merchant.findOne({ email: email.toLowerCase().trim() }).select("+passwordHash");
+    const ok = merchant && (await bcrypt.compare(password, merchant.passwordHash));
+    if (!ok) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    res.json({
+      token: signToken(merchant._id),
+      merchant: {
+        id: merchant._id,
+        businessName: merchant.businessName,
+        slug: merchant.slug,
+        role: merchant.role,
+      },
+    });
+  } catch (err) {
+    console.error("Admin login error:", err.message);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+}
+
+// Get current user (customer or merchant)
+export async function me(req, res) {
+  try {
+    const user = req.user || req.merchant;
+    if (user.role === "customer") {
+      res.json({
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
+    } else {
+      res.json({
+        merchant: {
+          id: user._id,
+          businessName: user.businessName,
+          slug: user.slug,
+          role: user.role,
+        },
+      });
+    }
+  } catch (err) {
+    console.error("Me error:", err.message);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+}
+
+export const adminMe = me;

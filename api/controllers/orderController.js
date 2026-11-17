@@ -1,12 +1,9 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
-import Merchant from "../models/merchant.js";
 import Product from "../models/product.js";
 import Order from "../models/order.js";
-import { formatPhone } from "../utils/phone.js";
-import { buildWhatsAppUrl } from "../utils/whatsapp.js";
-import config from "../config/index.js";
-import { startStkPush } from "../services/payment.js";
+import config, { isUsdtWalletConfigured } from "../config/index.js";
+import { findSingleStore } from "../services/singleStore.js";
 
 const CODE_CHARS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // no 0/O or 1/I confusion
 
@@ -33,30 +30,33 @@ export async function createOrder(req, res) {
   const reserved = [];
   let order;
   try {
-    const { customerName, customerPhone, deliveryAddress, notes, items } = req.body;
+    const { customerName, customerEmail, deliveryAddress, notes, items } = req.body;
 
     if (!isText(customerName, 80)) return res.status(400).json({ error: "Your name is required" });
+    if (
+      !isText(customerEmail, 254) ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())
+    ) {
+      return res.status(400).json({ error: "Enter a valid email address for delivery" });
+    }
     if (!isOptText(deliveryAddress, 200) || !isOptText(notes, 300)) {
       return res.status(400).json({ error: "Address or notes too long" });
-    }
-
-    let phone;
-    try {
-      phone = formatPhone(customerPhone);
-    } catch {
-      return res.status(400).json({ error: "Please enter a valid Kenyan phone number" });
     }
 
     if (!Array.isArray(items) || items.length < 1 || items.length > 30) {
       return res.status(400).json({ error: "Your cart must have 1 to 30 items" });
     }
 
-    const method = req.body.paymentMethod ?? "PAY_ON_DELIVERY";
-    if (method !== "PAY_ON_DELIVERY" && method !== "MPESA") {
+    const method = req.body.paymentMethod;
+    if (method !== "USDT") {
       return res.status(400).json({ error: "Invalid payment method" });
     }
-    if (method === "MPESA" && !config.mpesaReady) {
-      return res.status(400).json({ error: "M-Pesa payment is not available for this store yet" });
+    const paymentNetwork = req.body.paymentNetwork;
+    if (method === "USDT" && paymentNetwork !== "TRC20" && paymentNetwork !== "BEP20" && paymentNetwork !== "BINANCE") {
+      return res.status(400).json({ error: "Choose a supported USDT network" });
+    }
+    if (method === "USDT" && !isUsdtWalletConfigured(paymentNetwork)) {
+      return res.status(503).json({ error: `USDT payments on ${paymentNetwork} do not have a valid wallet address configured yet` });
     }
 
     // Merge duplicates and validate every item. Prices from the client are ignored.
@@ -77,8 +77,8 @@ export async function createOrder(req, res) {
       wanted.set(it.productId, total);
     }
 
-    const merchant = await Merchant.findOne({ slug: req.params.slug.toLowerCase(), isActive: true });
-    if (!merchant) return res.status(404).json({ error: "Store not found" });
+    const { merchant, status, error } = await findSingleStore();
+    if (!merchant) return res.status(status).json({ error });
 
     // Only this merchant's active products count
     const products = await Product.find({
@@ -89,11 +89,9 @@ export async function createOrder(req, res) {
     if (products.length !== wanted.size) {
       return res.status(400).json({ error: "One or more items are no longer available" });
     }
-    const preTotal = products.reduce((s, p) => s + p.price * wanted.get(String(p._id)), 0);
-    if (method === "MPESA" && preTotal < 1) {
-      return res.status(400).json({ error: "This order total cannot be paid with M-Pesa" });
+    if (products.some((product) => (product.currency || "KES") !== "USD")) {
+      return res.status(409).json({ error: "This cart contains products still priced in KES. The shop must update those prices to USD before checkout." });
     }
-
     // Reserve stock atomically: the update only succeeds if enough is left
     for (const p of products) {
       const qty = wanted.get(String(p._id));
@@ -115,7 +113,8 @@ export async function createOrder(req, res) {
       price: p.price,
       quantity: wanted.get(String(p._id)),
     }));
-    const total = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
+    const totalCents = lines.reduce((sum, line) => sum + Math.round(line.price * 100) * line.quantity, 0);
+    const total = totalCents / 100;
 
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
@@ -123,13 +122,17 @@ export async function createOrder(req, res) {
           merchant: merchant._id,
           orderCode: makeOrderCode(merchant.slug),
           customerName,
-          customerPhone: phone,
+          customerEmail: customerEmail.trim().toLowerCase(),
           deliveryAddress: deliveryAddress || undefined,
           notes: notes || undefined,
           items: lines,
           total,
+          currency: "USD",
           paymentMethod: method,
-          paymentAttempts: method === "MPESA" ? 1 : 0,
+          ...(method === "USDT" && {
+            paymentNetwork,
+            paymentAddress: config.usdtWallets[paymentNetwork],
+          }),
         });
         break;
       } catch (err) {
@@ -138,24 +141,17 @@ export async function createOrder(req, res) {
       }
     }
 
-    let paymentStarted = false;
-    if (method === "MPESA") {
-      try {
-        await startStkPush(merchant, order);
-        paymentStarted = true;
-      } catch (err) {
-        console.error("STK push failed:", err.response?.data || err.message);
-      }
-    }
-
     res.status(201).json({
       orderCode: order.orderCode,
       total: order.total,
+      currency: order.currency,
       items: order.items.map((i) => ({ name: i.name, price: i.price, quantity: i.quantity })),
       paymentMethod: method,
-      paymentStarted,
-      // For M-Pesa orders the WhatsApp link comes from the status endpoint once paid
-      ...(method === "PAY_ON_DELIVERY" && { whatsappUrl: buildWhatsAppUrl({ merchant, order }) }),
+      ...(method === "USDT" && {
+        paymentNetwork: order.paymentNetwork,
+        paymentAddress: order.paymentAddress,
+        cryptoAmount: order.total,
+      }),
     });
   } catch (err) {
     if (!order) {

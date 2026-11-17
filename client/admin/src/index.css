@@ -1,47 +1,129 @@
-:root {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #23332e;
-  background: #f5f8f6;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  color-scheme: light;
+@import "tailwindcss";
+
+@theme {
+  --color-bg: rgb(var(--bg));
+  --color-surface: rgb(var(--surface));
+  --color-text: rgb(var(--text));
+  --color-muted: rgb(var(--muted));
+  --color-line: rgb(var(--line));
+  --color-accent: rgb(var(--accent));
+  --color-accent-hover: rgb(var(--accent-hover));
+  --color-accent-soft: rgb(var(--accent-soft));
+  --color-accent-ink: rgb(var(--accent-ink));
+  --color-on-accent: rgb(var(--on-accent));
+  --color-success: rgb(var(--success));
+  --color-success-soft: rgb(var(--success-soft));
+  --color-danger: rgb(var(--danger));
+  --color-danger-soft: rgb(var(--danger-soft));
+  --color-warning: rgb(var(--warning));
+  --color-warning-soft: rgb(var(--warning-soft));
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
-* {
-  box-sizing: border-box;
+@layer base {
+  :root {
+    --bg: 250 245 238;
+    --surface: 255 253 249;
+    --text: 41 37 36;
+    --muted: 120 113 108;
+    --line: 231 221 208;
+    --accent: 194 65 12;
+    --accent-hover: 154 52 18;
+    --accent-soft: 255 237 213;
+    --accent-ink: 154 52 18;
+    --on-accent: 255 255 255;
+    --success: 22 101 52;
+    --success-soft: 220 252 231;
+    --danger: 185 28 28;
+    --danger-soft: 254 226 226;
+    --warning: 133 77 14;
+    --warning-soft: 254 249 195;
+    --font-sans: "Inter", system-ui, sans-serif;
+    --font-mono: ui-monospace, monospace;
+  }
+
+  .dark {
+    --bg: 28 25 23;
+    --surface: 41 37 36;
+    --text: 245 240 232;
+    --muted: 168 162 158;
+    --line: 63 58 54;
+    --accent: 249 115 22;
+    --accent-hover: 251 146 60;
+    --accent-soft: 67 20 7;
+    --accent-ink: 253 186 116;
+    --on-accent: 28 25 23;
+    --success: 134 239 172;
+    --success-soft: 20 83 45;
+    --danger: 252 165 165;
+    --danger-soft: 69 10 10;
+    --warning: 253 224 71;
+    --warning-soft: 66 32 6;
+  }
 }
 
-html {
-  min-width: 320px;
-  min-height: 100%;
-}
+@layer utilities {
+  .page-wrapper {
+    @apply min-h-screen flex flex-col;
+  }
 
-body {
-  min-width: 320px;
-  min-height: 100vh;
-  margin: 0;
-}
+  .page-content {
+    @apply flex-1;
+  }
 
-body,
-button,
-input {
-  font-family: inherit;
-}
+  .container-main {
+    @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
 
-#root {
-  min-height: 100vh;
-}
+  .page-section {
+    @apply py-6 sm:py-8;
+  }
 
-button,
-input {
-  font-size: inherit;
-}
+  .page-auth {
+    @apply max-w-[448px] mx-auto;
+  }
 
-::selection {
-  background: #d7eee4;
-  color: #173d31;
+  .layout-form {
+    @apply flex flex-col gap-4;
+  }
+
+  .form-field {
+    @apply flex flex-col gap-1.5;
+  }
+
+  .label-base {
+    @apply block text-xs font-bold text-muted;
+  }
+
+  .input-base {
+    @apply h-10 px-3 text-sm rounded-lg border border-line bg-surface placeholder:text-muted transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .animate-in {
+    animation: animate-in 0.3s ease-out forwards;
+  }
+
+  .fade-in-0 {
+    animation: fade-in 0.3s ease-out forwards;
+  }
+
+  .slide-in-from-bottom {
+    animation: slide-in-from-bottom 0.3s ease-out forwards;
+  }
+
+  @keyframes animate-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-in-from-bottom {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }

@@ -32,37 +32,53 @@ async function adminRequest(path, options = {}) {
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      window.location.href = "/register";
+    }
     const error = new Error(body.error || "Something went wrong");
     error.status = res.status;
+    error.code = body.error;
     throw error;
   }
   return body;
 }
 
-export const getStore = (slug) => request(`/store/${encodeURIComponent(slug)}`);
+export const getStore = () => request("/store");
 
-export const createOrder = (slug, orderData) =>
-  request(`/store/${encodeURIComponent(slug)}/orders`, {
+export const createOrder = (orderData) =>
+  request("/store/orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(orderData),
   });
 
-export const getOrderStatus = (slug, orderCode) =>
-  request(`/store/${encodeURIComponent(slug)}/orders/${orderCode}/status`);
+export const getOrderStatus = (orderCode) =>
+  request(`/store/orders/${encodeURIComponent(orderCode)}/status`);
 
-export const retryPayment = (slug, orderCode) =>
-  request(`/store/${encodeURIComponent(slug)}/orders/${orderCode}/pay`, {
+export const submitUsdtReference = (orderCode, transactionHash) =>
+  request(`/store/orders/${encodeURIComponent(orderCode)}/payment-reference`, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ transactionHash }),
   });
 
 export const adminLogin = (credentials) =>
-  adminRequest("/auth/login", { method: "POST", body: JSON.stringify(credentials) });
+  adminRequest("/auth/admin/login", { method: "POST", body: JSON.stringify(credentials) });
 
-export const adminRegister = (details) =>
-  adminRequest("/auth/register", { method: "POST", body: JSON.stringify(details) });
+export const register = (userData) => request("/auth/customer/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userData),
+  });
 
-export const getAdminMe = () => adminRequest("/auth/me");
+export const customerLogin = (credentials) =>
+  request("/auth/customer/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(credentials),
+  });
+
+export const getAdminMe = () => adminRequest("/auth/admin/me");
 
 export const getAdminProducts = () => adminRequest("/products");
 
@@ -78,9 +94,10 @@ export const updateAdminProduct = (id, changes) =>
 export const deleteAdminProduct = (id) =>
   adminRequest(`/products/${encodeURIComponent(id)}`, { method: "DELETE" });
 
-export const getAdminOrders = ({ status, page = 1, limit = 20 } = {}) => {
+export const getAdminOrders = ({ status, paymentStatus, page = 1, limit = 20 } = {}) => {
   const query = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (status) query.set("status", status);
+  if (paymentStatus) query.set("paymentStatus", paymentStatus);
   return adminRequest(`/order?${query}`);
 };
 

@@ -4,10 +4,8 @@ import Merchant from "../models/merchant.js";
 import Order from "../models/order.js";
 import { getCredentials } from "../mpesa/credentials.js";
 import { stkQuery } from "../mpesa/client.js";
-import { startStkPush } from "../services/payment.js";
 import { buildWhatsAppUrl } from "../utils/whatsapp.js";
-
-const MAX_ATTEMPTS = 3;
+import { findSingleStore } from "../services/singleStore.js";
 
 function secretOk(given) {
   const a = Buffer.from(String(given));
@@ -86,8 +84,6 @@ export async function stkCallback(req, res) {
   res.json({ ResultCode: 0, ResultDesc: "Accepted" });
 }
 
-const findStore = (slug) => Merchant.findOne({ slug: String(slug).toLowerCase(), isActive: true });
-
 function cleanCode(code) {
   const c = String(code).trim().toUpperCase();
   return /^[A-Z0-9-]{4,20}$/.test(c) ? c : null;
@@ -96,9 +92,10 @@ function cleanCode(code) {
 // Public: the checkout page polls this after sending the prompt
 export async function orderStatus(req, res) {
   try {
-    const merchant = await findStore(req.params.slug);
+    const { merchant, status, error } = await findSingleStore();
     const orderCode = cleanCode(req.params.orderCode);
-    if (!merchant || !orderCode) return res.status(404).json({ error: "Order not found" });
+    if (!merchant) return res.status(status).json({ error });
+    if (!orderCode) return res.status(404).json({ error: "Order not found" });
 
     const order = await Order.findOne({ merchant: merchant._id, orderCode }).lean();
     if (!order) return res.status(404).json({ error: "Order not found" });
@@ -110,6 +107,13 @@ export async function orderStatus(req, res) {
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
       total: order.total,
+      currency: order.currency || "KES",
+      ...(order.paymentMethod === "USDT" && {
+        paymentNetwork: order.paymentNetwork,
+        paymentAddress: order.paymentAddress,
+        cryptoAmount: order.total,
+        paymentReference: order.paymentReference,
+      }),
       ...(showLink && { whatsappUrl: buildWhatsAppUrl({ merchant, order }) }),
     });
   } catch (err) {
@@ -118,38 +122,95 @@ export async function orderStatus(req, res) {
   }
 }
 
-// Public: send the prompt again, to the order's own phone number only
-export async function retryPayment(req, res) {
+export async function submitUsdtReference(req, res) {
   try {
-    const merchant = await findStore(req.params.slug);
+    const { merchant, status, error } = await findSingleStore();
     const orderCode = cleanCode(req.params.orderCode);
-    if (!merchant || !orderCode) return res.status(404).json({ error: "Order not found" });
+    const reference = typeof req.body.transactionHash === "string"
+      ? req.body.transactionHash.trim()
+      : "";
+    if (!merchant) return res.status(status).json({ error });
+    if (!orderCode) return res.status(404).json({ error: "Order not found" });
+    if (!/^[a-fA-F0-9]{64}$/.test(reference)) {
+      return res.status(400).json({ error: "Enter the 64-character transaction hash from the selected network" });
+    }
 
-    // Reserve an attempt atomically, so rapid clicks can't exceed the cap
     const order = await Order.findOneAndUpdate(
       {
         merchant: merchant._id,
         orderCode,
-        paymentMethod: "MPESA",
+        paymentMethod: "USDT",
         paymentStatus: "UNPAID",
         status: { $ne: "CANCELLED" },
-        paymentAttempts: { $lt: MAX_ATTEMPTS },
       },
-      { $inc: { paymentAttempts: 1 } },
-      { new: true }
+      { $set: { paymentReference: reference.toLowerCase() } },
+      { new: true },
     );
-    if (!order) return res.status(409).json({ error: "This order can't be paid again. Please contact the shop." });
+    if (!order) return res.status(409).json({ error: "This order cannot accept a transaction reference" });
 
-    try {
-      await startStkPush(merchant, order);
-    } catch (err) {
-      console.error("Retry STK failed:", err.response?.data || err.message);
-      return res.status(502).json({ paymentStarted: false, error: "Couldn't send the M-Pesa prompt. Try again shortly." });
-    }
-
-    res.json({ paymentStarted: true });
+    res.json({ paymentReference: order.paymentReference });
   } catch (err) {
-    console.error("Retry payment error:", err.message);
+    console.error("USDT reference submission error:", err.message);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+}
+
+// Submit Alipay transaction reference
+export async function submitAlipayReference(req, res) {
+  try {
+    const { merchant, status, error } = await findSingleStore();
+    const orderCode = cleanCode(req.params.orderCode);
+    const reference = typeof req.body.reference === "string" ? req.body.reference.trim() : "";
+    if (!merchant) return res.status(status).json({ error });
+    if (!orderCode) return res.status(404).json({ error: "Order not found" });
+    if (!reference) return res.status(400).json({ error: "Alipay transaction ID required" });
+
+    const order = await Order.findOneAndUpdate(
+      {
+        merchant: merchant._id,
+        orderCode,
+        paymentMethod: "ALIPAY",
+        paymentStatus: "UNPAID",
+        status: { $ne: "CANCELLED" },
+      },
+      { $set: { paymentReference: reference } },
+      { new: true },
+    );
+    if (!order) return res.status(409).json({ error: "This order cannot accept an Alipay reference" });
+
+    res.json({ paymentReference: order.paymentReference });
+  } catch (err) {
+    console.error("Alipay reference submission error:", err.message);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+}
+
+// Submit bank transfer confirmation reference
+export async function submitBankReference(req, res) {
+  try {
+    const { merchant, status, error } = await findSingleStore();
+    const orderCode = cleanCode(req.params.orderCode);
+    const reference = typeof req.body.reference === "string" ? req.body.reference.trim() : "";
+    if (!merchant) return res.status(status).json({ error });
+    if (!orderCode) return res.status(404).json({ error: "Order not found" });
+    if (!reference) return res.status(400).json({ error: "Bank transfer confirmation code required" });
+
+    const order = await Order.findOneAndUpdate(
+      {
+        merchant: merchant._id,
+        orderCode,
+        paymentMethod: "BANK_TRANSFER",
+        paymentStatus: "UNPAID",
+        status: { $ne: "CANCELLED" },
+      },
+      { $set: { paymentReference: reference } },
+      { new: true },
+    );
+    if (!order) return res.status(409).json({ error: "This order cannot accept a bank transfer reference" });
+
+    res.json({ paymentReference: order.paymentReference });
+  } catch (err) {
+    console.error("Bank reference submission error:", err.message);
     res.status(500).json({ error: "Something went wrong" });
   }
 }

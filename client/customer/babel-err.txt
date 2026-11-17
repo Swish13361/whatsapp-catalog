@@ -1,0 +1,3 @@
+Cannot find module '@babel/plugin-syntax-jsx'
+Require stack:
+- C:\Users\scaramouche\Desktop\WhastaapCatalogApi\client\customer\[eval]

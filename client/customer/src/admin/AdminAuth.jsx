@@ -1,24 +1,23 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore.js";
-import "./admin.css";
+import { useLanguage } from "../useLanguage.js";
+import { useTheme } from "../hooks/useTheme.js";
+import { Icon } from "../ui/Icon.jsx";
+import { Button, Input, Card, Panel, ThemeToggle } from "../ui/index.js";
+import { ToastProvider } from "../ui/index.js";
 
-export default function AdminAuth({ mode = "login" }) {
-  const isRegister = mode === "register";
+export default function AdminAuth() {
   const navigate = useNavigate();
   const authStatus = useAuthStore((state) => state.status);
   const initialize = useAuthStore((state) => state.initialize);
   const login = useAuthStore((state) => state.login);
-  const register = useAuthStore((state) => state.register);
-  const [values, setValues] = useState({
-    businessName: "",
-    slug: "",
-    whatsappNumber: "",
-    email: "",
-    password: "",
-  });
+  const { t } = useLanguage();
+  const { mode, toggleTheme } = useTheme();
+  const [values, setValues] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (authStatus === "unknown") {
@@ -30,7 +29,8 @@ export default function AdminAuth({ mode = "login" }) {
 
   const update = (event) => {
     const { name, value } = event.target;
-    setValues((current) => ({ ...current, [name]: name === "slug" ? value.toLowerCase() : value }));
+    setValues((current) => ({ ...current, [name]: value }));
+    setError("");
   };
 
   const submit = async (event) => {
@@ -38,11 +38,7 @@ export default function AdminAuth({ mode = "login" }) {
     setBusy(true);
     setError("");
     try {
-      if (isRegister) {
-        await register(values);
-      } else {
-        await login({ email: values.email, password: values.password });
-      }
+      await login({ email: values.email, password: values.password });
       navigate("/admin", { replace: true });
     } catch (requestError) {
       setError(requestError.message);
@@ -52,71 +48,75 @@ export default function AdminAuth({ mode = "login" }) {
   };
 
   return (
-    <main className="admin-auth-page">
-      <section className="admin-auth-aside">
-        <a className="admin-auth-brand" href="/"><span className="admin-brand-mark">W</span> market<span>.</span></a>
-        <div className="admin-auth-message">
-          <span className="admin-auth-kicker"><span /> SELLER STUDIO</span>
-          <h1>Your shop,<br /><em>your way.</em></h1>
-          <p>One calm place to look after your products, orders, and the people who shop with you.</p>
-        </div>
-        <div className="admin-auth-aside-note"><span>✳</span> SMALL SHOPS, BIG POSSIBILITIES</div>
-        <div className="admin-auth-orbit" aria-hidden="true"><span>✳</span></div>
-      </section>
-
-      <section className="admin-auth-content">
-        <Link className="admin-auth-mobile-brand" to="/admin/login"><span className="admin-brand-mark">W</span> market.</Link>
-        <div className="admin-auth-form-wrap">
-          <p className="admin-auth-overline">{isRegister ? "START SELLING" : "WELCOME BACK"}</p>
-          <h2>{isRegister ? "Create your shop" : "Sign in to your shop"}</h2>
-          <p className="admin-auth-subtitle">
-            {isRegister ? "Set up your storefront and start sharing your products." : "Your orders and products are right where you left them."}
-          </p>
-
-          {authStatus === "error" && (
-            <p className="admin-form-error" role="status">We couldn’t verify your previous sign-in. Please sign in again.</p>
-          )}
-
-          <form className="admin-auth-form" onSubmit={submit}>
-            {isRegister && (
-              <>
-                <label className="admin-field">
-                  <span>Business name</span>
-                  <input name="businessName" value={values.businessName} onChange={update} maxLength={80} autoComplete="organization" placeholder="e.g. Willow & Co." required />
-                </label>
-                <label className="admin-field">
-                  <span>Store link <small>3–30 letters, numbers, or dashes</small></span>
-                  <div className="admin-slug-input"><span>/store/</span><input name="slug" value={values.slug} onChange={update} minLength={3} maxLength={30} pattern="[a-z0-9\x2d]+" placeholder="your-shop" required /></div>
-                </label>
-                <label className="admin-field">
-                  <span>WhatsApp number</span>
-                  <input name="whatsappNumber" type="tel" value={values.whatsappNumber} onChange={update} autoComplete="tel" placeholder="0712 345 678" required />
-                  <small className="admin-field-hint">Use a Kenyan number, starting with 07, 01, or 254.</small>
-                </label>
-              </>
-            )}
-            <label className="admin-field">
-              <span>Email address</span>
-              <input name="email" type="email" value={values.email} onChange={update} autoComplete="email" placeholder="you@yourshop.co.ke" required />
-            </label>
-            <label className="admin-field">
-              <span>Password {isRegister && <small>At least 8 characters</small>}</span>
-              <input name="password" type="password" value={values.password} onChange={update} autoComplete={isRegister ? "new-password" : "current-password"} minLength={isRegister ? 8 : undefined} required />
-            </label>
-
-            {error && <p className="admin-form-error" role="alert">{error}</p>}
-            <button className="admin-button admin-button-primary admin-auth-submit" type="submit" disabled={busy}>
-              {busy ? "One moment..." : isRegister ? "Create my shop" : "Sign in"} <span aria-hidden="true">→</span>
-            </button>
-          </form>
-
-          <p className="admin-auth-switch">
-            {isRegister ? "Already have a shop?" : "New to market?"}{" "}
-            <Link to={isRegister ? "/admin/login" : "/admin/register"}>{isRegister ? "Sign in" : "Create your shop"}</Link>
-          </p>
-        </div>
-        <p className="admin-auth-legal">By continuing, you agree to keep your shop information accurate.</p>
-      </section>
-    </main>
+    <ToastProvider>
+      <div className="admin-app flex h-full min-h-screen flex-column bg-bg text-text">
+        <aside className="admin-sidebar shrink-0 border-r border-line bg-surface">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-line">
+            <span className="flex items-center gap-2.5 text-accent-on font-bold" aria-label="Catalog dashboard">
+              <span className="flex shrink-0 items-center justify-center w-7 h-7 rounded-lg bg-accent text-accent-on font-bold text-sm">A</span>
+              <span>Aether</span>
+            </span>
+          </div>
+          <div className="flex-1 flex items-center justify-center p-4">
+            <div className="w-full max-w-[440px]">
+              <div className="text-center mb-8">
+                <span className="flex shrink-0 items-center justify-center w-16 h-16 rounded-xl bg-accent-soft text-accent-ink font-bold text-2xl mx-auto mb-4">A</span>
+                <h1 className="text-xl font-bold text-text">{t("signInToYourShop")}</h1>
+                <p className="text-sm text-muted mt-1">Manage your digital products, orders, and payment confirmations.</p>
+              </div>
+              <Card padded>
+                {authStatus === "error" && (
+                  <p className="text-sm text-danger mb-4" role="status">We couldn't verify your previous sign-in. Please sign in again.</p>
+                )}
+                {error && <p className="text-sm text-danger mb-4" role="alert">{error}</p>}
+                <form className="admin-auth-form flex flex-column gap-4" onSubmit={submit} noValidate>
+                  <div className="flex flex-column gap-1">
+                    <label className="text-xs font-bold text-muted">Email address</label>
+                    <Input
+                      name="email"
+                      type="email"
+                      value={values.email}
+                      onChange={update}
+                      autoComplete="email"
+                      placeholder="you@yourshop.co.ke"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-column gap-1">
+                    <label className="text-xs font-bold text-muted">Password</label>
+                    <div className="relative">
+                      <Input
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        value={values.password}
+                        onChange={update}
+                        autoComplete="current-password"
+                        required
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-muted hover:text-accent transition-colors"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                  </div>
+                  <Button variant="primary" className="w-full" loading={busy} type="submit" disabled={busy}>
+                    {busy ? "One moment..." : "Sign in"}
+                  </Button>
+                </form>
+                <p className="text-xs text-muted mt-4 text-center">Private owner access for the Aether digital store.</p>
+              </Card>
+            </div>
+          </div>
+          <div className="px-4 py-4 border-t border-line">
+            <ThemeToggle mode={mode} setMode={toggleTheme} t={t} className="w-full" />
+          </div>
+        </aside>
+      </div>
+    </ToastProvider>
   );
 }

@@ -87,3 +87,5 @@ export default function StoreLinkCard({ slug, compact = false }) {
     </section>
   );
 }
+
+

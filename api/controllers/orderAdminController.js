@@ -16,14 +16,21 @@ const NEXT = {
 
 export async function listOrders(req, res) {
   try {
-    const { status } = req.query;
+    const { status, paymentStatus } = req.query;
     if (status !== undefined && (typeof status !== "string" || !STATUSES.includes(status))) {
       return res.status(400).json({ error: "Invalid status filter" });
+    }
+    if (paymentStatus !== undefined && !["PAID", "UNPAID"].includes(paymentStatus)) {
+      return res.status(400).json({ error: "Invalid payment status filter" });
     }
 
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 50);
-    const filter = { merchant: req.merchant._id, ...(status && { status }) };
+    const filter = {
+      merchant: req.merchant._id,
+      ...(status && { status }),
+      ...(paymentStatus && { paymentStatus }),
+    };
 
     const [orders, total, grouped] = await Promise.all([
       Order.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
@@ -113,6 +120,15 @@ export async function markPaid(req, res) {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: "Invalid order id" });
 
+    const current = await Order.findOne({ _id: req.params.id, merchant: req.merchant._id }).lean();
+    if (!current) return res.status(404).json({ error: "Order not found" });
+
+    // Check payment reference based on method
+    const needsReference = ["USDT"].includes(current.paymentMethod) && !current.paymentReference;
+    if (needsReference) {
+      return res.status(409).json({ error: "Ask the customer for the transaction hash before confirming this USDT payment." });
+    }
+
     const updated = await Order.findOneAndUpdate(
       {
         _id: req.params.id,
@@ -125,10 +141,7 @@ export async function markPaid(req, res) {
     );
 
     if (!updated) {
-      const exists = await Order.exists({ _id: req.params.id, merchant: req.merchant._id });
-      return exists
-        ? res.status(409).json({ error: "Order is cancelled or already paid" })
-        : res.status(404).json({ error: "Order not found" });
+      return res.status(409).json({ error: "Order is cancelled or already paid" });
     }
 
     res.json({ order: updated });

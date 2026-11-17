@@ -43,7 +43,7 @@ app.use('/store', storeRoute);
 app.use('/order', orderRoute);
 app.use('/api/payments', paymentRoute);
  
-const PORT =  process.env.PORT   || 8000  ; 
+const PORT =  process.env.PORT   || 3000  ; 
 async function startServer() {
   try {
     await connectedDB();

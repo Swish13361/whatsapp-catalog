@@ -1,7 +1,8 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
-import requireAuth from "../middleware/auth.js";
-import { register, login, me, checkSlugAvailability } from "../controllers/authController.js";
+import { customerRegister, customerLogin, me } from "../controllers/authController.js";
+import { adminRegister, adminLogin, adminMe } from "../controllers/authController.js";
+import { requireAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -12,16 +13,12 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
-const slugAvailabilityLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+router.post("/customer/register", limiter, customerRegister);
+router.post("/customer/login", limiter, customerLogin);
+router.get("/me", me);
 
-router.get("/slug/:slug/available", slugAvailabilityLimiter, checkSlugAvailability);
-router.post("/register", limiter, register);
-router.post("/login", limiter, login);
-router.get("/me", requireAuth, me);
+router.post("/admin/register", adminRegister);
+router.post("/admin/login", adminLogin);
+router.get("/admin/me", requireAdmin, adminMe);
 
 export default router;
