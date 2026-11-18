@@ -13,12 +13,7 @@ import {
   Badge,
   Panel,
   Icon,
-  Input,
-  QuantityStepper,
-  ImageZoom,
-  Modal,
   Chips,
-  LoadingOverlay,
   Toast,
   Tooltip,
   EmptyStateWithAction,
@@ -35,9 +30,7 @@ function formatPrice(price, currency = "USDT", language = "en") {
   ).format(Number(price || 0));
 }
 
-function ProductCard({ product, cartItem, onAdd, onChangeQty, disabled, t, language, mixedCurrency, onQuickView }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [showQty, setShowQty] = useState(false);
+function ProductCard({ product, cartItem, onAdd, onChangeQty, disabled, t, language, mixedCurrency }) {
   const inStock = product.inStock !== false;
   const qty = cartItem?.qty || 0;
   const isInCart = qty > 0;
@@ -45,15 +38,14 @@ function ProductCard({ product, cartItem, onAdd, onChangeQty, disabled, t, langu
   return (
     <Card
       padded
-      className="flex flex-col h-full group border border-line bg-surface rounded-lg shadow-sm hover:border-accent/40 transition-[border-color] duration-150"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="flex flex-col h-full group border border-line bg-surface rounded-xl shadow-md hover:border-accent/40 transition-[border-color] duration-150 p-4"
     >
-      <div className="relative aspect-[4/3] bg-line/60 overflow-hidden rounded-lg">
-        <ImageZoom
+      <div className="relative aspect-[3/4] bg-line/60 overflow-hidden rounded-lg">
+        <img
           src={product.imageUrl}
           alt={product.name}
-          className="product-thumb"
+          loading="lazy"
+          className="product-thumb w-full h-full object-cover"
         />
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
           <Badge variant="accent" className="text-xs" aria-hidden="true">
@@ -71,16 +63,6 @@ function ProductCard({ product, cartItem, onAdd, onChangeQty, disabled, t, langu
               {t("outOfStock")}
             </span>
           </div>
-        )}
-        {isHovered && inStock && (
-          <button
-            type="button"
-            onClick={onQuickView}
-            className="absolute bottom-2.5 right-2.5 min-w-[40px] min-h-[40px] rounded-full bg-surface/95 border border-line text-text flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-[opacity,background-color] duration-150 hover:bg-accent-soft hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            aria-label={t("quickView", { item: product.name })}
-          >
-            <Icon name="maximize2" size={16} />
-          </button>
         )}
       </div>
 
@@ -284,7 +266,6 @@ export default function ShopHome() {
   const activeSlug = slug || SINGLE_STORE_KEY;
   const cart = cartSlug === activeSlug ? storedCart : [];
   const [category, setCategory] = useState("All");
-  const [quickViewProduct, setQuickViewProduct] = useState(null);
 
   useEffect(() => {
     console.log('[ShopHome] cart state:', { cartSlug, storedCartLength: storedCart?.length, cartLength: cart?.length, activeSlug });
@@ -381,10 +362,6 @@ useEffect(() => {
     }
   }, [addItem, changeCartQuantity, cartCurrencies, toast, t, navigate, activeSlug]);
 
-  const handleQuickView = useCallback((product) => {
-    setQuickViewProduct(product);
-  }, []);
-
   const supportEmail = "support@aether.example";
 
   if (status === "loading") {
@@ -400,7 +377,7 @@ useEffect(() => {
               Fetching products from the store. This usually takes just a moment.
             </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-8 max-w-5xl w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-8 max-w-5xl w-full">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="border border-line bg-surface rounded-lg p-4 space-y-3 animate-pulse">
                 <Skeleton className="aspect-[4/3] w-full rounded-lg" />
@@ -528,7 +505,7 @@ return (
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" role="list" aria-label="Products">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" role="list" aria-label="Products">
                   {visibleProducts.map((product, index) => {
                     const item = cartItems.find((cartItem) => cartItem.productId === product._id);
                     const mixedCurrency = cartCurrencies.length > 0 && !cartCurrencies.includes(product.currency || "KES");
@@ -544,7 +521,6 @@ return (
                         t={t}
                         language={language}
                         mixedCurrency={mixedCurrency}
-                        onQuickView={handleQuickView}
                       />
                     );
                   })}
@@ -569,47 +545,7 @@ return (
             />
           </aside>
         </div>
-      </Page>
-
-      {quickViewProduct && (
-        <Modal
-          open={!!quickViewProduct}
-          onClose={() => setQuickViewProduct(null)}
-          title={quickViewProduct.name}
-          size="md"
-        >
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="aspect-video bg-line relative overflow-hidden rounded-lg">
-              <ImageZoom
-                src={quickViewProduct.imageUrl}
-                alt={quickViewProduct.name}
-                className="w-full h-full object-cover"
-              />
-              <Badge variant="accent" className="absolute top-3 left-3 text-xs">{t("autoDelivery")}</Badge>
-            </div>
-            <div className="flex flex-col gap-4 p-2">
-              <p className="text-sm text-muted">{quickViewProduct.description || t("digitalProductFromShop")}</p>
-              <div className="flex items-center gap-2">
-                <PriceTag amount={quickViewProduct.price} currency={quickViewProduct.currency || "USDT"} />
-                <span className="text-xs text-muted">
-                  {quickViewProduct.stock == null ? t("unlimitedStock") : `${quickViewProduct.stock} ${t("inStock")}`}
-                </span>
-              </div>
-              <div className="flex gap-2 pt-2 border-t border-line">
-                <Button variant="primary" className="flex-1" onClick={() => { 
-                  changeQuantity(quickViewProduct, 1); 
-                  setQuickViewProduct(null); 
-                }}>
-                  {t("addToBag")}
-                </Button>
-                <Button variant="secondary" onClick={() => navigate(`/item/${quickViewProduct._id}`)}>
-                  {t("viewDetails")}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
+</Page>
     </>
   );
 }
