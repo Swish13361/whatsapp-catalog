@@ -1,17 +1,17 @@
 import express   from 'express';  
- 
+
 import  authRoute  from './routes/authRoute.js';
 import  productRoute  from './routes/proudcts.js';
 import  storeRoute  from './routes/storeRpute.js';
 import  orderRoute  from './routes/order.js';
 import paymentRoute from './routes/paymentRoutes.js';
 import  connectedDB  from './config/db.js';
+import { initRateLimiters } from './middleware/rateLimiters.js';
  import  dotenv from 'dotenv';
- 
+
 dotenv.config();
 
- 
- 
+
 const  app =  express();
 
 const allowedOrigins = new Set(
@@ -42,11 +42,12 @@ app.use('/products', productRoute);
 app.use('/store', storeRoute);
 app.use('/order', orderRoute);
 app.use('/api/payments', paymentRoute);
- 
+
 const PORT =  process.env.PORT   || 3000  ; 
 async function startServer() {
   try {
     await connectedDB();
+    await initRateLimiters();
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });
@@ -57,4 +58,3 @@ async function startServer() {
 }
 
 startServer();
- 
