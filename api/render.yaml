@@ -3,8 +3,8 @@ services:
     name: aether-api
     runtime: node
     plan: free
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: cd api && npm install
+    startCommand: cd api && npm start
     healthCheckPath: /auth/me
     envVars:
       - key: NODE_ENV
