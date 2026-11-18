@@ -20,7 +20,7 @@
     "node-appwrite": "^31.3.0",
     "qrcode": "^1.5.4",
     "rate-limit-redis": "^6.0.2",
-    "redis": "^6.3.1"
+    "ioredis": "^5.4.1"
   },
   "engines": {
     "node": ">=20.0.0"

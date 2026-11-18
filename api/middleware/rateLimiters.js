@@ -1,12 +1,9 @@
 import rateLimit from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
-import { getRedis } from "../services/redis.js";
+import redis from "../services/redis.js";
 
-let redisClient = null;
+const redisClient = redis;
 const limiters = {};
-
-export async function initRateLimiters() {
-  redisClient = await getRedis();
 
   const noUser = (req) => !req.user?.id;
 
