@@ -390,20 +390,19 @@ useEffect(() => {
   if (status === "loading") {
     return (
       <Page brand={storeName} variant="sidebar">
-        <section aria-label="Loading shop" className="flex-1">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-            <div className="flex-1">
-              <Skeleton className="h-10 w-full max-w-md rounded-lg" />
+        <section aria-label="Loading shop" className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent-soft text-accent animate-pulse">
+              <Icon name="package" size={28} />
             </div>
-            <div className="flex gap-2">
-              <Skeleton className="h-8 w-16 rounded-full" />
-              <Skeleton className="h-8 w-20 rounded-full" />
-              <Skeleton className="h-8 w-20 rounded-full" />
-            </div>
+            <h2 className="text-lg font-semibold text-text">{t("loadingShop")}</h2>
+            <p className="text-sm text-muted max-w-xs mx-auto">
+              Fetching products from the store. This usually takes just a moment.
+            </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-8 max-w-5xl w-full">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="border border-line bg-surface rounded-lg p-4 space-y-3">
+              <div key={i} className="border border-line bg-surface rounded-lg p-4 space-y-3 animate-pulse">
                 <Skeleton className="aspect-[4/3] w-full rounded-lg" />
                 <Skeleton heading className="w-3/4" />
                 <Skeleton text className="w-1/2" />
@@ -416,7 +415,7 @@ useEffect(() => {
           </div>
         </section>
         <aside className="lg:sticky lg:top-20 flex flex-col gap-4 w-full shrink-0">
-          <div className="border border-line bg-surface rounded-lg p-5 space-y-4">
+          <div className="border border-line bg-surface rounded-lg p-5 space-y-4 animate-pulse">
             <Skeleton heading className="w-1/2" />
             <Skeleton text className="w-3/4" />
             <div className="space-y-3 pt-3 border-t border-line">
@@ -432,26 +431,40 @@ useEffect(() => {
   if (status === "not-found") {
     return (
       <Page brand={storeName} variant="default">
-        <EmptyStateWithAction
-          title={t("shopSetupNeeded")}
-          description={t("noActiveShop")}
-          icon="store"
-          action={
-            <Button onClick={() => void fetchStore({ force: true })}>{t("tryAgain")}</Button>
-          }
-        />
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-6">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-line/50 mb-6">
+            <Icon name="store" size={32} className="text-muted" />
+          </div>
+          <h2 className="text-xl font-semibold text-text mb-2">
+            {t("shopSetupNeeded")}
+          </h2>
+          <p className="text-muted mb-6 max-w-md">
+            No active shop is configured yet. Click <strong className="text-text">"Shop"</strong> in the navigation to start browsing products.
+          </p>
+          <Button onClick={() => void fetchStore({ force: true })} variant="primary">
+            {t("tryAgain")}
+          </Button>
+        </div>
       </Page>
     );
   }
   if (status === "network-error" || !merchant) {
     return (
       <Page brand={storeName} variant="default">
-        <EmptyStateWithAction
-          title={t("shopCouldNotLoad")}
-          description={storeResult?.error || t("connectionError")}
-          icon="alertTriangle"
-          action={<Button onClick={() => void fetchStore({ force: true })}>{t("tryAgain")}</Button>}
-        />
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-6">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-danger-soft mb-6">
+            <Icon name="alertTriangle" size={32} className="text-danger" />
+          </div>
+          <h2 className="text-xl font-semibold text-text mb-2">
+            {t("shopCouldNotLoad")}
+          </h2>
+          <p className="text-muted mb-6 max-w-md">
+            {storeResult?.error || t("connectionError")}
+          </p>
+          <Button onClick={() => void fetchStore({ force: true })} variant="primary">
+            {t("tryAgain")}
+          </Button>
+        </div>
       </Page>
     );
   }
@@ -487,13 +500,33 @@ return (
               </div>
 
               {visibleProducts.length === 0 ? (
-                <EmptyStateWithAction
-                  title={products.length ? t("noProductsFound") : t("productsOnTheWay")}
-                  description={products.length ? t("tryAnotherCategory") : t("ownerCanAddProducts")}
-                  icon="search"
-                  action={null}
-                  className="py-12"
-                />
+                <div className="flex flex-col items-center justify-center min-h-[300px] text-center px-6 py-12">
+                  {products.length === 0 ? (
+                    <>
+                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-line/50 mb-4">
+                        <Icon name="package" size={32} className="text-muted" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-text mb-2">
+                        {t("productsOnTheWay")}
+                      </h3>
+                      <p className="text-muted mb-4 max-w-md">
+                        No products available yet. Once the admin adds products, they'll appear here automatically.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-line/50 mb-4">
+                        <Icon name="search" size={32} className="text-muted" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-text mb-2">
+                        {t("noProductsFound")}
+                      </h3>
+                      <p className="text-muted mb-4 max-w-md">
+                        {t("tryAnotherCategory")}
+                      </p>
+                    </>
+                  )}
+                </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" role="list" aria-label="Products">
                   {visibleProducts.map((product, index) => {
