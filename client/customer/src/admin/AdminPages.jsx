@@ -578,29 +578,35 @@ const [values, setValues] = useState(() => product ? {
     if (stock !== null && (!Number.isInteger(stock) || stock < 0)) return setError("Stock must be a whole number, or blank for unlimited.");
 
     setBusy(true);
-    const payload = {
-      name,
-      description: values.description.trim(),
-      category: values.category.trim(),
-      price,
-      currency: values.currency,
-      imageUrl: values.imageUrl.trim(),
-      stock,
-      isActive: values.isActive,
-    };
+    let imageUrl = values.imageUrl.trim();
+    let imageFileId = null;
+
     try {
-      let savedProduct;
-      if (product) {
-        savedProduct = await updateAdminProduct(product._id, payload);
-      } else {
-        savedProduct = await createAdminProduct(payload);
-      }
-
       if (selectedFile) {
-        const result = await uploadAdminProductImage(savedProduct._id, selectedFile);
-        setImagePreview(result.imageUrl);
+        const result = await uploadAdminProductImage(selectedFile);
+        imageUrl = result.imageUrl;
+        imageFileId = result.fileId;
       }
 
+      const payload = {
+        name,
+        description: values.description.trim(),
+        category: values.category.trim(),
+        price,
+        currency: values.currency,
+        imageUrl,
+        imageFileId,
+        stock,
+        isActive: values.isActive,
+      };
+
+      if (product) {
+        await updateAdminProduct(product._id, payload);
+      } else {
+        await createAdminProduct(payload);
+      }
+
+      setImagePreview(imageUrl);
       await onSaved();
     } catch (requestError) {
       setError(requestError.message);

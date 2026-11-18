@@ -1,6 +1,8 @@
 const API = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 const apiUrl = (path) => `${API}${API ? "" : "/api"}${path}`;
 
+import { uploadProductImage as uploadToAppwrite } from "./lib/appwrite.js";
+
 async function request(path, options) {
   let res;
   try {
@@ -94,13 +96,8 @@ export const updateAdminProduct = (id, changes) =>
 export const deleteAdminProduct = (id) =>
   adminRequest(`/products/${encodeURIComponent(id)}`, { method: "DELETE" });
 
-export const uploadAdminProductImage = (id, file) => {
-  const formData = new FormData();
-  formData.append("image", file);
-  return adminRequest(`/products/${encodeURIComponent(id)}/image`, {
-    method: "POST",
-    body: formData,
-  });
+export const uploadAdminProductImage = async (file) => {
+  return uploadToAppwrite(file);
 };
 
 export const getAdminOrders = ({ status, paymentStatus, page = 1, limit = 20 } = {}) => {

@@ -51,6 +51,10 @@ function cleanProduct(body, partial = false) {
     data.imageUrl = body.imageUrl || null;
   }
 
+  if (body.imageFileId !== undefined) {
+    data.imageFileId = body.imageFileId || null;
+  }
+
   if (body.stock !== undefined) {
     if (body.stock !== null && (!Number.isInteger(body.stock) || body.stock < 0)) {
       return { error: "Stock must be a whole number, or null for unlimited" };
@@ -97,12 +101,18 @@ export async function updateProduct(req, res) {
     if (error) return res.status(400).json({ error });
     if (Object.keys(data).length === 0) return res.status(400).json({ error: "Nothing to update" });
 
+    const existingProduct = await Product.findOne({ _id: req.params.id, merchant: req.merchant._id });
+    if (!existingProduct) return res.status(404).json({ error: "Product not found" });
+
+    if (data.imageFileId !== undefined && data.imageFileId !== existingProduct.imageFileId) {
+      if (existingProduct.imageFileId) await deleteImage(existingProduct.imageFileId);
+    }
+
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, merchant: req.merchant._id },
       { $set: data },
       { new: true, runValidators: true }
     );
-    if (!product) return res.status(404).json({ error: "Product not found" });
 
     res.json(product);
   } catch (err) {
