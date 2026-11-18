@@ -10,10 +10,12 @@ const productSchema = new mongoose.Schema(
     currency: { type: String, enum: ["USD", "KES"] },
     imageUrl: String,
     imageFileId: String,
-    stock: { type: Number, default: null, min: 0 }, // null = unlimited
+    stock: { type: Number, default: null, min: 0 },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
+
+productSchema.index({ merchant: 1, isActive: 1 });
 
 export default mongoose.model("Product", productSchema);

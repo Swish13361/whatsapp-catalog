@@ -19,4 +19,6 @@ const merchantSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+merchantSchema.index({ isActive: 1 });
+
 export default mongoose.model("Merchant", merchantSchema);
