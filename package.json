@@ -15,6 +15,7 @@
       "ioredis": "^6.0.0",
       "jsonwebtoken": "^9.0.3",
       "mongoose": "^9.12.1",
+      "multer": "^2.5.0",
       "nodemon": "^3.1.14",
       "rate-limit-redis": "^6.0.2",
       "redis": "^6.3.1"
