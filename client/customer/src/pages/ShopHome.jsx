@@ -178,9 +178,10 @@ function CartSidebar({ cartItems, products, cartCount, cartTotal, cartCurrency, 
                     const inStock = product?.inStock !== false;
                     return (
                       <li key={item.productId} className="py-3 flex items-center gap-3 transition-[background-color] duration-150 hover:bg-accent-soft/30 rounded-lg px-2 -ml-2">
-                        <ImageZoom
+                        <img
                           src={product?.imageUrl}
                           alt={item.name}
+                          loading="lazy"
                           className="w-14 h-14 object-cover rounded-lg bg-line/60 flex-shrink-0"
                         />
                         <div className="flex flex-col gap-1 min-w-0 flex-1">
