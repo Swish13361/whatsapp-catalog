@@ -11,7 +11,6 @@ import {
   uploadAdminProductImage,
 } from "../api.js";
 import StoreLinkCard from "../components/StoreLinkCard.jsx";
-import { useLanguage } from "../useLanguage.js";
 import {
   Button,
   Input,
@@ -48,12 +47,7 @@ function getCustomerEmailUrl(order) {
   return `mailto:${order.customerEmail}?subject=${encodeURIComponent(`Digital order ${order.orderCode}`)}`;
 }
 
-function formatStatus(value = "") {
-  return value.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 function Dashboard() {
-  const { t } = useLanguage();
   const [merchant, setMerchant] = useState(null);
   const [products, setProducts] = useState([]);
 const [newProduct, setNewProduct] = useState({
@@ -86,11 +80,11 @@ const [newProduct, setNewProduct] = useState({
     }
   }, []);
 
-  const fetchOrders = useCallback(async () => {
+const fetchOrders = useCallback(async () => {
     try {
       const data = await adminOrders({
         ...(statusFilter && { status: statusFilter }),
-        ...(paymentFilter && { paymentStatus: paymentStatus }),
+        ...(paymentFilter && { paymentStatus: paymentFilter }),
       });
       setOrders(data.orders);
     } catch (err) {
@@ -105,7 +99,7 @@ const [newProduct, setNewProduct] = useState({
       adminProducts(),
       adminOrders({
         ...(statusFilter && { status: statusFilter }),
-        ...(paymentFilter && { paymentStatus: paymentStatus }),
+        ...(paymentFilter && { paymentStatus: paymentFilter }),
       }),
     ])
       .then(([merchantData, productData, orderData]) => {
@@ -125,23 +119,25 @@ const [newProduct, setNewProduct] = useState({
 const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const created = await adminCreateProduct({
+      let imageUrl = newProduct.imageUrl || "";
+      let imageFileId = null;
+
+      if (selectedFile) {
+        const result = await uploadAdminProductImage(selectedFile);
+        imageUrl = result.imageUrl;
+        imageFileId = result.fileId;
+      }
+
+      await adminCreateProduct({
         name: newProduct.name,
         description: newProduct.description,
         category: newProduct.category,
         price: Number(newProduct.price),
         currency: newProduct.currency,
-        imageUrl: newProduct.imageUrl || undefined,
+        imageUrl,
+        imageFileId,
         stock: newProduct.stock === "" ? null : Number(newProduct.stock),
       });
-
-      if (selectedFile && created?._id) {
-        try {
-          await uploadAdminProductImage(created._id, selectedFile);
-        } catch {
-          // image upload failed; product still created
-        }
-      }
 
       setNewProduct({ name: "", description: "", category: "", price: "", currency: "USD", imageUrl: "" });
       setShowCreate(false);
@@ -162,23 +158,25 @@ const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editingProduct) return;
     try {
-      const updated = await adminUpdateProduct(editingProduct._id, {
+      let imageUrl = editingProduct.imageUrl || "";
+      let imageFileId = editingProduct.imageFileId || null;
+
+      if (editingFile) {
+        const result = await uploadAdminProductImage(editingFile);
+        imageUrl = result.imageUrl;
+        imageFileId = result.fileId;
+      }
+
+      await adminUpdateProduct(editingProduct._id, {
         name: editingProduct.name,
         description: editingProduct.description,
         category: editingProduct.category || "Other",
         price: Number(editingProduct.price),
         currency: editingProduct.currency || "KES",
-        imageUrl: editingProduct.imageUrl || undefined,
+        imageUrl,
+        imageFileId,
         stock: editingProduct.stock === "" || editingProduct.stock === undefined ? null : Number(editingProduct.stock),
       });
-
-      if (editingFile && updated?._id) {
-        try {
-          await uploadAdminProductImage(updated._id, editingFile);
-        } catch {
-          // image upload failed; product still updated
-        }
-      }
 
       setEditingProduct(null);
       setShowCreate(false);

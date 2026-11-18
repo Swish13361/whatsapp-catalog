@@ -1,5 +1,7 @@
 const API = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
+import { uploadProductImage as uploadToAppwrite } from "./lib/appwrite.js";
+
 async function request(path, options) {
   const token = localStorage.getItem("adminToken");
   let res;
@@ -62,13 +64,8 @@ export const adminDeleteProduct = (id) =>
     method: "DELETE",
   });
 
-export const uploadAdminProductImage = (id, file) => {
-  const formData = new FormData();
-  formData.append("image", file);
-  return request(`/products/${encodeURIComponent(id)}/image`, {
-    method: "POST",
-    body: formData,
-  });
+export const uploadAdminProductImage = async (file) => {
+  return uploadToAppwrite(file);
 };
 
 export const adminOrders = (filters = {}) => {

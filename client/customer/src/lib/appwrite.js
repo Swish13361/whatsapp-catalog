@@ -28,3 +28,8 @@ export async function deleteProductImage(fileId) {
     console.warn("Failed to delete Appwrite file:", err.message);
   }
 }
+
+export function getImageUrl(fileId) {
+  if (!fileId || !BUCKET_ID) return "";
+  return storage.getFileView(BUCKET_ID, fileId).toString();
+}
