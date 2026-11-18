@@ -8,8 +8,6 @@ import {
   updateAdminProduct,
   uploadAdminProductImage,
 } from "../api.js";
-import { getStaticProducts } from "../data/staticProducts.js";
-import { resetStaticProductSales, getStaticProductSold } from "../utils/staticProductStock.js";
 import {
   Button,
   Input,
@@ -76,9 +74,8 @@ export function AdminDashboard() {
     setError("");
     try {
       const [orderResult, productResult] = await Promise.all([getAdminOrders({ page: 1, limit: 6 }), getAdminProducts()]);
-      const staticProducts = getStaticProducts();
       setOrdersResult(orderResult);
-      setProducts(mergeProducts(productResult, staticProducts));
+      setProducts(productResult);
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -89,9 +86,8 @@ export function AdminDashboard() {
     Promise.all([getAdminOrders({ page: 1, limit: 6 }), getAdminProducts()])
       .then(([orderResult, productResult]) => {
         if (active) {
-          const staticProducts = getStaticProducts();
           setOrdersResult(orderResult);
-          setProducts(mergeProducts(productResult, staticProducts));
+          setProducts(productResult);
         }
       })
       .catch((requestError) => {
@@ -329,16 +325,6 @@ export function AdminOrders() {
 
 const blankProduct = { name: "", description: "", category: "", price: "", currency: DEFAULT_CURRENCY, imageUrl: "", stock: "", isActive: true };
 
-function mergeProducts(apiProducts, staticProducts) {
-  const merged = [...apiProducts];
-  for (const staticProduct of staticProducts) {
-    if (!merged.some(p => p._id === staticProduct._id)) {
-      merged.push({ ...staticProduct, isStatic: true });
-    }
-  }
-  return merged;
-}
-
 export function AdminProducts() {
   const navigate = useNavigate();
   const [products, setProducts] = useState(null);
@@ -352,9 +338,7 @@ export function AdminProducts() {
     setLoading(true);
     setError("");
     try {
-      const apiProducts = await getAdminProducts();
-      const staticProducts = getStaticProducts();
-      setProducts(mergeProducts(apiProducts, staticProducts));
+      setProducts(await getAdminProducts());
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -365,13 +349,7 @@ export function AdminProducts() {
   useEffect(() => {
     let active = true;
     getAdminProducts()
-      .then((productList) => {
-        if (active) {
-          const staticProducts = getStaticProducts();
-          setProducts(mergeProducts(productList, staticProducts));
-          setError("");
-        }
-      })
+      .then((productList) => { if (active) { setProducts(productList); setError(""); } })
       .catch((requestError) => { if (active) setError(requestError.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -387,10 +365,6 @@ export function AdminProducts() {
   }, [products, query, tab]);
 
   const toggleProduct = async (product) => {
-    if (product.isStatic) {
-      setActionError("Static products cannot be modified. Edit them in src/data/staticProducts.js");
-      return;
-    }
     setActionError("");
     try {
       await updateAdminProduct(product._id, { isActive: !product.isActive });
@@ -400,31 +374,12 @@ export function AdminProducts() {
     }
   };
 
-const removeProduct = async (product) => {
-    if (product.isStatic) {
-      setActionError("Static products cannot be deleted. Remove them from src/data/staticProducts.js");
-      return;
-    }
+  const removeProduct = async (product) => {
     if (!window.confirm(`Permanently delete "${product.name}"? This can't be undone.`)) return;
     setActionError("");
     try {
       await deleteAdminProduct(product._id);
       setProducts((current) => current.filter((entry) => entry._id !== product._id));
-    } catch (requestError) {
-      setActionError(requestError.message);
-    }
-  };
-
-  const resetStaticStock = async (product) => {
-    if (!product.isStatic) return;
-    if (!window.confirm(`Reset stock for "${product.name}"? This will set sold count back to 0.`)) return;
-    setActionError("");
-    try {
-      resetStaticProductSales(product._id);
-      // Refresh products to show updated stock
-      const apiProducts = await getAdminProducts();
-      const staticProducts = getStaticProducts();
-      setProducts(mergeProducts(apiProducts, staticProducts));
     } catch (requestError) {
       setActionError(requestError.message);
     }
@@ -487,8 +442,8 @@ const removeProduct = async (product) => {
               </thead>
               <tbody>
                 {visibleProducts.map((product) => {
-                  const soldCount = product.isStatic ? getStaticProductSold(product._id) : (product.originalStock !== undefined ? product.originalStock - (product.stock || 0) : 0);
-                  const showSold = product.isStatic || (product.originalStock !== undefined && product.originalStock !== null);
+                  const soldCount = product.originalStock !== undefined ? product.originalStock - (product.stock || 0) : 0;
+                  const showSold = product.originalStock !== undefined && product.originalStock !== null;
                   return (
                     <tr key={product._id}>
                       <td className={`${td} text-sm text-text ${product.isActive ? "" : "opacity-60"}`}>
@@ -503,22 +458,10 @@ const removeProduct = async (product) => {
                       <td className={`${td} text-sm text-muted`}>{showSold ? soldCount : "—"}</td>
                       <td className={td}><StatusBadge status={product.isActive ? "active" : "inactive"} /></td>
                       <td className={td}>
-                        {product.isStatic && <StatusBadge status="info" label="Static" />}
-                      </td>
-                      <td className={td}>
                         <div className="flex items-center gap-3">
-                          {product.isStatic ? (
-                            <>
-                              <button type="button" onClick={() => resetStaticStock(product)} className="text-xs font-bold text-accent hover:text-accent-hover underline underline-offset-2">Reset Stock</button>
-                              <span className="text-xs text-muted">Managed in code</span>
-                            </>
-                          ) : (
-                            <>
-                              <Link to={`/admin/products/${product._id}`} className="text-xs font-bold text-accent hover:text-accent-hover underline underline-offset-2">Edit</Link>
-                              <button type="button" onClick={() => toggleProduct(product)} className="text-xs font-bold text-muted hover:text-accent transition-colors">{product.isActive ? "Hide" : "Show"}</button>
-                              <button type="button" onClick={() => removeProduct(product)} className="text-xs font-bold text-danger hover:underline underline-offset-2">Delete</button>
-                            </>
-                          )}
+                          <Link to={`/admin/products/${product._id}`} className="text-xs font-bold text-accent hover:text-accent-hover underline underline-offset-2">Edit</Link>
+                          <button type="button" onClick={() => toggleProduct(product)} className="text-xs font-bold text-muted hover:text-accent transition-colors">{product.isActive ? "Hide" : "Show"}</button>
+                          <button type="button" onClick={() => removeProduct(product)} className="text-xs font-bold text-danger hover:underline underline-offset-2">Delete</button>
                         </div>
                       </td>
                     </tr>
@@ -698,17 +641,6 @@ if (!isNew && product === null) {
     return (
       <main className={pageClass}>
         <EmptyState title="Product not found" description="It may have been deleted." action={<Button onClick={back}>Back to products</Button>} />
-      </main>
-    );
-  }
-  if (!isNew && product.isStatic) {
-    return (
-      <main className={pageClass}>
-        <EmptyState
-          title="Static product"
-          description="This product is defined in src/data/staticProducts.js and cannot be edited here. Edit the source file to make changes."
-          action={<Button onClick={back}>Back to products</Button>}
-        />
       </main>
     );
   }
