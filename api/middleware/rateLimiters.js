@@ -1,6 +1,6 @@
 import rateLimit from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
-import { getRedis } from "./redis.js";
+import { getRedis } from "../services/redis.js";
 
 let redisClient = null;
 
