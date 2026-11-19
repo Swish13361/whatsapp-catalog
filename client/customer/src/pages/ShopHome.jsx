@@ -384,6 +384,23 @@ const supportEmail = "aetherlystore@gmail.com";
         </div>
       </Page>
     );
+}
+  if (status === "loading") {
+    return (
+      <Page brand={storeName} variant="sidebar">
+        <section aria-label="Loading shop" className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent-soft text-accent animate-pulse">
+              <Icon name="package" size={28} />
+            </div>
+            <h2 className="text-lg font-semibold text-text">{t("loadingShop")}</h2>
+            <p className="text-sm text-muted max-w-xs mx-auto">
+              {t("loadingShopMessage")}
+            </p>
+          </div>
+        </section>
+      </Page>
+    );
   }
   if (status === "network-error" || !merchant) {
     return (

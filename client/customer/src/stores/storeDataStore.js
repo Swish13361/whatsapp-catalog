@@ -23,10 +23,30 @@ export const useStoreDataStore = create((set, get) => ({
     // If we have stale cached data, keep showing it while fetching fresh data
     const hasStaleCache = cached && (cached.status === "ready" || cached.status === "not-found");
     
-    // Don't show loading state - just fetch in background
-    // if (!hasStaleCache) {
-    //   set((state) => ({...
-    // }}
+    if (!hasStaleCache) {
+      // Show loading state on first load
+      set((state) => ({
+        stores: {
+          ...state.stores,
+          [storeKey]: {
+            slug: storeKey,
+            merchant: null,
+            products: [],
+            paymentOptions: {
+              supportedUsdtNetworks: ["TRC20", "BEP20", "BINANCE"],
+              usdtNetworks: [],
+              alipayEnabled: false,
+              alipayAccount: "",
+              bankTransferEnabled: false,
+              bankDetails: {},
+            },
+            status: "loading",
+            error: "",
+            updatedAt: 0,
+          },
+        },
+      }));
+    }
 
     try {
       const data = await getStore(slug);
