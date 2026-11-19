@@ -459,6 +459,9 @@ return (
                     {supportEmail}
                   </a>
                 </p>
+                <p className="text-sm text-muted mt-2">
+                  For Claude users, there are currently very few Ccmax Ultra accounts available for sale. These accounts offer guaranteed stability, no KYC, top-ups with physical cards, and a one-month warranty.
+                </p>
               </Panel>
             </section>
 
