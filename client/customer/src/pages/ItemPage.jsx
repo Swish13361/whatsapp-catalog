@@ -67,8 +67,8 @@ export default function ItemPage() {
       if (pendingId) {
         sessionStorage.removeItem("pendingBuyItem");
         if (product && product._id === pendingId) {
-          addItem(SINGLE_STORE_KEY, product);
-          toast({ title: `${product.name} ${t("addedToBag")}`, variant: "success" });
+addItem(SINGLE_STORE_KEY, product);
+          toast({ title: `${product.name} ${t("addedToCart")}`, variant: "success" });
         }
       }
     }
@@ -89,8 +89,8 @@ export default function ItemPage() {
       toast({ title: t("maxQuantityReached"), variant: "warning" });
       return;
     }
-    addItem(SINGLE_STORE_KEY, product);
-    toast({ title: `${product.name} ${t("addedToBag")}`, variant: "success" });
+addItem(SINGLE_STORE_KEY, product);
+    toast({ title: `${product.name} ${t("addedToCart")}`, variant: "success" });
   }, [inStock, cartQty, addItem, product, toast, t]);
 
   const handleBuyNow = () => {

@@ -337,9 +337,9 @@ useEffect(() => {
         sessionStorage.removeItem("pendingBuyItem");
         const product = products.find((p) => p._id === pendingId);
         if (product) {
-          addItem(activeSlug, product);
+addItem(activeSlug, product);
           setTimeout(() => {
-            toast(`${product.name} ${t("addedToBag")}`, "success");
+            toast(`${product.name} ${t("addedToCart")}`, "success");
           }, 0);
         }
       }
@@ -356,8 +356,8 @@ useEffect(() => {
         toast(t("clearBagToSwitchCurrency"), "warning");
         return;
       }
-      addItem(activeSlug, product);
-      toast(`${product.name} ${t("addedToBag")}`, "success");
+addItem(activeSlug, product);
+      toast(`${product.name} ${t("addedToCart")}`, "success");
     } else {
       changeCartQuantity(activeSlug, product, amount);
     }
@@ -460,7 +460,7 @@ return (
                   </a>
                 </p>
                 <p className="text-sm text-muted mt-2">
-                  {t("noticeClaudeInfo")}
+                  {t("noticeCCMaxInfo")}
                 </p>
               </Panel>
             </section>
