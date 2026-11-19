@@ -158,13 +158,13 @@ const validate = () => {
 {fieldErrors.password && <p className="text-xs text-danger animate-in fade-in-0">{fieldErrors.password}</p>}
                 <PasswordStrength password={values.password} />
               </div>
-              <div className="form-field">
+<div className="form-field">
                 <Checkbox
                   checked={acceptedTerms}
                   onChange={(e) => setAcceptedTerms(e.target.checked)}
                   label={
                     <>
-                      I agree to the <a href="/terms" className="text-accent hover:text-accent-hover underline underline-offset-2">Terms and Conditions</a> and <a href="/privacy" className="text-accent hover:text-accent-hover underline underline-offset-2">Privacy Policy</a>
+                      I agree to the <button type="button" onClick={() => navigate("/terms")} className="text-accent hover:text-accent-hover underline underline-offset-2 p-0 font-inherit bg-transparent cursor-pointer">Terms and Conditions</button> and <button type="button" onClick={() => navigate("/privacy")} className="text-accent hover:text-accent-hover underline underline-offset-2 p-0 font-inherit bg-transparent cursor-pointer">Privacy Policy</button>
                     </>
                   }
                   error={Boolean(fieldErrors.terms)}
@@ -175,7 +175,7 @@ const validate = () => {
                 {t("createAccount")}
               </Button>
               <p className="text-xs text-center text-muted">{t("noCardNeeded")}</p>
-<p className="text-xs text-center text-muted">
+              <p className="text-xs text-center text-muted">
                 Already have an account?{" "}
                 <button
                   type="button"
