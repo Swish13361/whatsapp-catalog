@@ -374,8 +374,8 @@ addItem(activeSlug, product);
               <Icon name="package" size={28} />
             </div>
             <h2 className="text-lg font-semibold text-text">{t("loadingShop")}</h2>
-            <p className="text-sm text-muted max-w-xs mx-auto">
-              Fetching products from the store. This usually takes just a moment. If it takes longer, click the logo or the <a href="/" className="text-accent hover:text-accent-hover underline underline-offset-2">Shop</a> link to refresh.
+<p className="text-sm text-muted max-w-xs mx-auto">
+              {t("loadingShopMessage")}
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-8 max-w-5xl w-full">
