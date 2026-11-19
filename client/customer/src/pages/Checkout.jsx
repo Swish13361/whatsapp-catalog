@@ -312,8 +312,11 @@ export default function Checkout() {
               </form>
             </Panel>
 
-            <Card padded className="bg-info-soft/30 border-info/50 animate-in slide-in-from-bottom" style={{ animationDelay: "200ms" }}>
-              <h4 className="text-sm font-bold text-info mb-2">Account Delivery Information</h4>
+            <Card padded className="bg-warning-soft/30 border-warning/50 animate-in slide-in-from-bottom" style={{ animationDelay: "200ms" }}>
+              <div className="flex items-start gap-2">
+                <Icon name="alertTriangle" size={16} className="text-warning shrink-0 mt-0.5" />
+                <h4 className="text-sm font-bold text-warning mb-2">Purchase Notice</h4>
+              </div>
               <p className="text-xs text-muted mb-2">Each account is delivered for the buyer's individual use. Our overseas staff register accounts themselves and complete the applicable identity checks.</p>
               <p className="text-xs text-muted">We send account details to your delivery email. If you have not received them, check your spam folder or contact support with your order number to arrange delivery.</p>
             </Card>
