@@ -264,7 +264,8 @@ export default function ShopHome() {
   const changeCartQuantity = useCartStore((state) => state.changeQuantity);
   const clearCart = useCartStore((state) => state.clearCart);
   const { toast } = useToast();
-  const activeSlug = slug || SINGLE_STORE_KEY;
+const activeSlug = slug || SINGLE_STORE_KEY;
+  const validSlug = slug && slug !== "_index" ? slug : undefined;
   const cart = cartSlug === activeSlug ? storedCart : [];
   const [category, setCategory] = useState("All");
 
@@ -272,9 +273,9 @@ export default function ShopHome() {
     console.log('[ShopHome] cart state:', { cartSlug, storedCartLength: storedCart?.length, cartLength: cart?.length, activeSlug });
   }, [cartSlug, storedCart, cart, activeSlug]);
 
-  useEffect(() => {
-    void fetchStore({ slug });
-  }, [fetchStore, slug]);
+useEffect(() => {
+    void fetchStore({ slug: validSlug });
+  }, [fetchStore, validSlug]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
