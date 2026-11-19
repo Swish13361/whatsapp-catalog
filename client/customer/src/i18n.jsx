@@ -429,9 +429,9 @@ requireRetry: "重试",
 
 function getStoredLanguage() {
   try {
-    return localStorage.getItem(LANGUAGE_STORAGE_KEY) === "zh-CN" ? "zh-CN" : "en";
+    return localStorage.getItem(LANGUAGE_STORAGE_KEY) || "zh-CN";
   } catch {
-    return "en";
+    return "zh-CN";
   }
 }
 

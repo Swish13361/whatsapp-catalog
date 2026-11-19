@@ -19,7 +19,7 @@ import {
   EmptyStateWithAction,
   Page,
 } from "../ui/index.js";
-import { ToastProvider, useToast } from "../ui/index.js";
+import { useToast } from "../ui/index.js";
 
 const EMPTY_PRODUCTS = [];
 
