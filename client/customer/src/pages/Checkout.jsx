@@ -311,6 +311,12 @@ export default function Checkout() {
                 </Button>
               </form>
             </Panel>
+
+            <Card padded className="bg-info-soft/30 border-info/50 animate-in slide-in-from-bottom" style={{ animationDelay: "200ms" }}>
+              <h4 className="text-sm font-bold text-info mb-2">Account Delivery Information</h4>
+              <p className="text-xs text-muted mb-2">Each account is delivered for the buyer's individual use. Our overseas staff register accounts themselves and complete the applicable identity checks.</p>
+              <p className="text-xs text-muted">We send account details to your delivery email. If you have not received them, check your spam folder or contact support with your order number to arrange delivery.</p>
+            </Card>
           </section>
 
           <aside className="lg:sticky lg:top-20 flex flex-col gap-4 w-full shrink-0 animate-in slide-in-from-bottom" style={{ animationDelay: "100ms" }}>
