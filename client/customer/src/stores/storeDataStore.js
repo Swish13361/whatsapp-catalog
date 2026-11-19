@@ -53,6 +53,24 @@ export const useStoreDataStore = create((set, get) => ({
         },
       }));
     } catch (error) {
+      // If we have stale cached data, keep showing it instead of error page
+      const staleData = get().stores[storeKey];
+      const hasStaleCache = staleData && (staleData.status === "ready" || staleData.status === "not-found");
+      
+      if (hasStaleCache) {
+        // Update timestamp but keep stale data visible
+        set((state) => ({
+          stores: {
+            ...state.stores,
+            [storeKey]: {
+              ...state.stores[storeKey],
+              updatedAt: Date.now(),
+            },
+          },
+        }));
+        return;
+      }
+      
       set((state) => ({
         stores: {
           ...state.stores,

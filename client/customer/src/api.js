@@ -1,7 +1,7 @@
 const API = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 const apiUrl = (path) => `${API}${API ? "" : "/api"}${path}`;
  
-const FETCH_TIMEOUT_MS = 20000;
+const FETCH_TIMEOUT_MS = 30000;
  
 async function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController();
@@ -15,9 +15,13 @@ async function fetchWithTimeout(url, options = {}) {
     if (error.name === "AbortError") {
       const err = new Error("REQUEST_TIMEOUT");
       err.code = "TIMEOUT";
+      err.status = 408;
       throw err;
     }
-    throw error;
+    const err = new Error("NETWORK_ERROR");
+    err.code = "NETWORK";
+    err.status = 0;
+    throw err;
   }
 }
  
