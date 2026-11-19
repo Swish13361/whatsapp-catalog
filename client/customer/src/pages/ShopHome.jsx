@@ -262,10 +262,10 @@ export default function ShopHome() {
   const storedCart = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
   const changeCartQuantity = useCartStore((state) => state.changeQuantity);
-  const clearCart = useCartStore((state) => state.clearCart);
+const clearCart = useCartStore((state) => state.clearCart);
   const { toast } = useToast();
-const activeSlug = slug || SINGLE_STORE_KEY;
   const validSlug = slug && slug !== "_index" ? slug : undefined;
+  const activeSlug = validSlug || SINGLE_STORE_KEY;
   const cart = cartSlug === activeSlug ? storedCart : [];
   const [category, setCategory] = useState("All");
 
