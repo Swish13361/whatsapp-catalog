@@ -315,15 +315,21 @@ export default function Checkout() {
             <Card padded className="bg-warning-soft/30 border-warning/50 animate-in slide-in-from-bottom" style={{ animationDelay: "200ms" }}>
               <div className="flex items-start gap-2">
                 <Icon name="alertTriangle" size={16} className="text-warning shrink-0 mt-0.5" />
-                <h4 className="text-sm font-bold text-warning mb-2">Purchase Notice</h4>
+                <h4 className="text-sm font-bold text-warning mb-3">{t("purchaseNoticeTitle")}</h4>
               </div>
-              <p className="text-xs text-muted mb-2">Please read the product details carefully before placing an order to avoid unnecessary disputes.</p>
-              <p className="text-xs text-muted mb-2">Most products come with automatic delivery of activation codes after purchase. Fully self-service.</p>
-              <p className="text-xs text-muted mb-2">Agents & Resellers Wanted (Contact via TG or WhatsApp)</p>
-              <p className="text-xs text-muted mb-2">Contact Customer Support to Reduce Transaction Fees.</p>
-              <p className="text-xs text-muted mb-2">Bulk Corporate Orders Available · Invoices Provided</p>
-              <p className="text-xs text-muted">(Long-Term Stable Supply)</p>
-              <p className="text-xs text-muted">Bookmark Our Store · Stay Connected</p>
+              <p className="text-xs text-muted mb-3 font-semibold">{t("purchaseNoticeHeader")}</p>
+              <p className="text-xs text-muted mb-3">{t("purchaseNoticeBody1")}</p>
+              <p className="text-xs text-muted mb-2 font-medium">{t("purchaseNoticeBody2")}</p>
+              <ul className="text-xs text-muted space-y-2 ml-4 list-disc mb-3">
+                <li>{t("purchaseNoticeItem1")}</li>
+                <li>{t("purchaseNoticeItem2")}</li>
+                <li>{t("purchaseNoticeItem3")}</li>
+                <li>{t("purchaseNoticeItem4")}</li>
+              </ul>
+              <p className="text-xs text-muted mb-3 font-semibold text-warning">{t("purchaseNoticeImportant")}</p>
+              <p className="text-xs text-muted mb-3">{t("purchaseNoticeNoResponsibility")}</p>
+              <p className="text-xs text-muted mb-3">{t("purchaseNoticeAcknowledge")}</p>
+              <p className="text-xs text-muted font-semibold">{t("purchaseNoticeThanks")}</p>
             </Card>
           </section>
 
