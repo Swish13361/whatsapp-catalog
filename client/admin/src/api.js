@@ -43,7 +43,7 @@ export const adminRegister = (businessName, email, password) =>
 
 export const adminMe = () => request("/auth/admin/me");
 
-export const adminProducts = () => request("/products");
+export const adminProducts = () => request("/products").then((res) => res.products || []);
 
 export const adminCreateProduct = (productData) =>
   request("/products", {
@@ -74,7 +74,13 @@ export const adminOrders = (filters = {}) => {
   if (filters.paymentStatus) query.set("paymentStatus", filters.paymentStatus);
   const queryString = query.toString();
   const suffix = queryString ? `?${queryString}` : "";
-  return request(`/order${suffix}`);
+  return request(`/order${suffix}`).then((res) => ({
+    orders: res.orders || [],
+    total: res.total,
+    page: res.page,
+    pages: res.pages,
+    counts: res.counts,
+  }));
 };
 
 export const adminGetOrder = (id) => request(`/order/${id}`);
