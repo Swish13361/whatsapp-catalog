@@ -52,6 +52,8 @@ export default function App() {
           <Route path="/" element={<ShopHome />} />
           <Route path="/store" element={<Navigate to="/" replace />} />
           <Route path="/store/:slug" element={<ShopHome />} />
+          <Route path="/_index" element={<Navigate to="/" replace />} />
+          <Route path="/_index/:slug" element={<Navigate to="/:slug" replace />} />
           <Route path="/order" element={<Navigate to="/checkout" replace />} />
           <Route path="/order/:legacySlug" element={<Navigate to="/checkout" replace />} />
           <Route path="/item/:id" element={<ItemPage />} />
