@@ -317,8 +317,13 @@ export default function Checkout() {
                 <Icon name="alertTriangle" size={16} className="text-warning shrink-0 mt-0.5" />
                 <h4 className="text-sm font-bold text-warning mb-2">Purchase Notice</h4>
               </div>
-              <p className="text-xs text-muted mb-2">Each account is delivered for the buyer's individual use. Our overseas staff register accounts themselves and complete the applicable identity checks.</p>
-              <p className="text-xs text-muted">We send account details to your delivery email. If you have not received them, check your spam folder or contact support with your order number to arrange delivery.</p>
+              <p className="text-xs text-muted mb-2">Please read the product details carefully before placing an order to avoid unnecessary disputes.</p>
+              <p className="text-xs text-muted mb-2">Most products come with automatic delivery of activation codes after purchase. Fully self-service.</p>
+              <p className="text-xs text-muted mb-2">Agents & Resellers Wanted (Contact via TG or WhatsApp)</p>
+              <p className="text-xs text-muted mb-2">Contact Customer Support to Reduce Transaction Fees.</p>
+              <p className="text-xs text-muted mb-2">Bulk Corporate Orders Available · Invoices Provided</p>
+              <p className="text-xs text-muted">(Long-Term Stable Supply)</p>
+              <p className="text-xs text-muted">Bookmark Our Store · Stay Connected</p>
             </Card>
           </section>
 

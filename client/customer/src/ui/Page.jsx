@@ -2,7 +2,7 @@ import { Children, isValidElement } from "react";
 import { TopBar } from "../layout/TopBar.jsx";
 import { Footer } from "../layout/Footer.jsx";
 
-export function Page({ children, brand = "Aether", variant = "default", className, supportEmail = "support@aether.example" }) {
+export function Page({ children, brand = "Aether", variant = "default", className, supportEmail = "aetherlystore@gmail.com" }) {
   const kids = Children.toArray(children).filter(isValidElement);
   const spaced = kids.map((child, index) => (
     <div key={child.key ?? index} className={index > 0 ? "mt-6" : ""}>
