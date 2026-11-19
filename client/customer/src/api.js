@@ -1,12 +1,30 @@
 const API = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 const apiUrl = (path) => `${API}${API ? "" : "/api"}${path}`;
-
-import { uploadProductImage as uploadToAppwrite } from "./lib/appwrite.js";
-
+ 
+const FETCH_TIMEOUT_MS = 20000;
+ 
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeoutId);
+    return res;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === "AbortError") {
+      const err = new Error("REQUEST_TIMEOUT");
+      err.code = "TIMEOUT";
+      throw err;
+    }
+    throw error;
+  }
+}
+ 
 async function request(path, options) {
   let res;
   try {
-    res = await fetch(apiUrl(path), options);
+    res = await fetchWithTimeout(apiUrl(path), options);
   } catch {
     const error = new Error("NETWORK_ERROR");
     error.code = "NETWORK";
@@ -24,7 +42,7 @@ async function request(path, options) {
 
 async function adminRequest(path, options = {}) {
   const token = localStorage.getItem("adminToken");
-  const res = await fetch(apiUrl(path), {
+  const res = await fetchWithTimeout(apiUrl(path), {
     ...options,
     headers: {
       ...(options.headers || {}),

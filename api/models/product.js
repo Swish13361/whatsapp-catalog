@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+ 
 const productSchema = new mongoose.Schema(
   {
     merchant: { type: mongoose.Schema.Types.ObjectId, ref: "Merchant", required: true, index: true },
@@ -15,7 +15,8 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
+ 
 productSchema.index({ merchant: 1, isActive: 1 });
-
+productSchema.index({ merchant: 1, isActive: 1, createdAt: -1 });
+ 
 export default mongoose.model("Product", productSchema);

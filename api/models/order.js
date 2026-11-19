@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+ 
 const itemSchema = new mongoose.Schema(
   {
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
@@ -9,7 +9,7 @@ const itemSchema = new mongoose.Schema(
   },
   { _id: false }
 );
-
+ 
 const orderSchema = new mongoose.Schema(
   {
     merchant: { type: mongoose.Schema.Types.ObjectId, ref: "Merchant", required: true, index: true },
@@ -40,11 +40,14 @@ const orderSchema = new mongoose.Schema(
     paymentReference: String,
     paymentStatus: { type: String, enum: ["UNPAID", "PAID"], default: "UNPAID" },
     checkoutIds: { type: [String], index: true },
-paymentAttempts: { type: Number, default: 0 },
-paymentNote: String,
+    paymentAttempts: { type: Number, default: 0 },
+    paymentNote: String,
     mpesaReceipt: String,
   },
   { timestamps: true }
 );
-
+ 
+orderSchema.index({ merchant: 1, status: 1, createdAt: -1 });
+orderSchema.index({ merchant: 1, paymentStatus: 1, createdAt: -1 });
+ 
 export default mongoose.model("Order", orderSchema);

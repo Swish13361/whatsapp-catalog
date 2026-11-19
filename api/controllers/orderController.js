@@ -19,11 +19,9 @@ const isOptText = (v, max) =>
   v === undefined || v === null || v === "" || (typeof v === "string" && v.trim().length <= max);
 
 async function releaseStock(reserved) {
-  while (reserved.length > 0) {
-    const r = reserved[reserved.length - 1];
-    await Product.updateOne({ _id: r.id }, { $inc: { stock: r.qty } });
-    reserved.pop();
-  }
+  await Promise.all(
+    reserved.map((r) => Product.updateOne({ _id: r.id }, { $inc: { stock: r.qty } }))
+  );
 }
 
 export async function createOrder(req, res) {
@@ -92,20 +90,34 @@ export async function createOrder(req, res) {
     if (products.some((product) => (product.currency || "KES") !== "USD")) {
       return res.status(409).json({ error: "This cart contains products still priced in KES. The shop must update those prices to USD before checkout." });
     }
-    // Reserve stock atomically: the update only succeeds if enough is left
-    for (const p of products) {
-      const qty = wanted.get(String(p._id));
-      if (p.stock === null || p.stock === undefined) continue; // unlimited
-      const result = await Product.updateOne(
-        { _id: p._id, stock: { $gte: qty } },
-        { $inc: { stock: -qty } }
+    // Reserve stock atomically in parallel: the update only succeeds if enough is left
+    const reserveResults = await Promise.all(
+      products.map(async (p) => {
+        const qty = wanted.get(String(p._id));
+        if (p.stock === null || p.stock === undefined) return { success: true, id: p._id, qty: 0 }; // unlimited
+        const result = await Product.updateOne(
+          { _id: p._id, stock: { $gte: qty } },
+          { $inc: { stock: -qty } }
+        );
+        if (result.modifiedCount !== 1) {
+          return { success: false, id: p._id, qty, name: p.name };
+        }
+        return { success: true, id: p._id, qty };
+      })
+    );
+ 
+    const failed = reserveResults.find((r) => !r.success);
+    if (failed) {
+      // Rollback successful reservations
+      await Promise.all(
+        reserveResults
+          .filter((r) => r.success && r.qty > 0)
+          .map((r) => Product.updateOne({ _id: r.id }, { $inc: { stock: r.qty } }))
       );
-      if (result.modifiedCount !== 1) {
-        await releaseStock(reserved);
-        return res.status(409).json({ error: `Not enough stock for ${p.name}` });
-      }
-      reserved.push({ id: p._id, qty });
+      return res.status(409).json({ error: `Not enough stock for ${failed.name}` });
     }
+ 
+    reserved.push(...reserveResults.filter((r) => r.qty > 0).map((r) => ({ id: r.id, qty: r.qty })));
 
     const lines = products.map((p) => ({
       product: p._id,

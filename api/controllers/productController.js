@@ -85,8 +85,15 @@ export async function createProduct(req, res) {
 
 export async function listMyProducts(req, res) {
   try {
-    const products = await Product.find({ merchant: req.merchant._id }).sort({ createdAt: -1 }).lean();
-    res.json(products);
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 50);
+    const products = await Product.find({ merchant: req.merchant._id })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+    const total = await Product.countDocuments({ merchant: req.merchant._id });
+    res.json({ products, page, limit, total, pages: Math.ceil(total / limit) });
   } catch (err) {
     console.error("List products error:", err.message);
     res.status(500).json({ error: "Something went wrong" });

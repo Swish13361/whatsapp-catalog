@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+ 
 const merchantSchema = new mongoose.Schema(
   {
     businessName: { type: String, required: true, trim: true, maxlength: 80 },
@@ -18,7 +18,8 @@ const merchantSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
+ 
 merchantSchema.index({ isActive: 1 });
-
+merchantSchema.index({ slug: 1, isActive: 1 });
+ 
 export default mongoose.model("Merchant", merchantSchema);
