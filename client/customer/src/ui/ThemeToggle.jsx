@@ -1,7 +1,7 @@
 import { Icon } from "../ui/Icon.jsx";
 
 export function ThemeToggle({ mode, setMode, t, className }) {
-  const icons = { auto: "sunMoon", light: "sun", dark: "moon" };
+  const icons = { light: "sun", dark: "moon" };
   return (
     <button
       type="button"

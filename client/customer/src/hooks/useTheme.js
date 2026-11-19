@@ -1,32 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
 
-const MODES = ["auto", "light", "dark"];
+const MODES = ["light", "dark"];
 
 function getStoredMode() {
   try {
     return MODES.includes(localStorage.getItem("store-theme"))
       ? localStorage.getItem("store-theme")
-      : "auto";
+      : "light";
   } catch {
-    return "auto";
+    return "light";
   }
 }
 
 export function useTheme() {
   const [mode, setModeState] = useState(getStoredMode);
-  const [systemDark, setSystemDark] = useState(
-    () => window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false,
-  );
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
-    if (!mediaQuery) return undefined;
-    const update = (event) => setSystemDark(event.matches);
-    mediaQuery.addEventListener("change", update);
-    return () => mediaQuery.removeEventListener("change", update);
-  }, []);
-
-  const dark = mode === "dark" || (mode === "auto" && systemDark);
+  const dark = mode === "dark";
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
