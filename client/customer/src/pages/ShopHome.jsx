@@ -363,49 +363,8 @@ addItem(activeSlug, product);
     }
   }, [addItem, changeCartQuantity, cartCurrencies, toast, t, navigate, activeSlug]);
 
-  const supportEmail = "aetherlystore@gmail.com";
+const supportEmail = "aetherlystore@gmail.com";
 
-  if (status === "loading") {
-    return (
-      <Page brand={storeName} variant="sidebar">
-        <section aria-label="Loading shop" className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
-          <div className="text-center space-y-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent-soft text-accent animate-pulse">
-              <Icon name="package" size={28} />
-            </div>
-            <h2 className="text-lg font-semibold text-text">{t("loadingShop")}</h2>
-<p className="text-sm text-muted max-w-xs mx-auto">
-              {t("loadingShopMessage")}
-            </p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-8 max-w-5xl w-full">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="border border-line bg-surface rounded-lg p-4 space-y-3 animate-pulse">
-                <Skeleton className="aspect-[4/3] w-full rounded-lg" />
-                <Skeleton heading className="w-3/4" />
-                <Skeleton text className="w-1/2" />
-                <div className="pt-2 border-t border-line flex justify-between items-center">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-8 w-20 rounded-lg" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-        <aside className="lg:sticky lg:top-20 flex flex-col gap-4 w-full shrink-0">
-          <div className="border border-line bg-surface rounded-lg p-5 space-y-4 animate-pulse">
-            <Skeleton heading className="w-1/2" />
-            <Skeleton text className="w-3/4" />
-            <div className="space-y-3 pt-3 border-t border-line">
-              <Skeleton className="h-12 w-full rounded-lg" />
-              <Skeleton className="h-12 w-full rounded-lg" />
-            </div>
-            <Skeleton className="h-10 w-full rounded-lg" />
-          </div>
-        </aside>
-      </Page>
-    );
-  }
   if (status === "not-found") {
     return (
       <Page brand={storeName} variant="default">
