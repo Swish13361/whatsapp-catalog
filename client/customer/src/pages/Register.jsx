@@ -175,9 +175,15 @@ const validate = () => {
                 {t("createAccount")}
               </Button>
               <p className="text-xs text-center text-muted">{t("noCardNeeded")}</p>
-              <p className="text-xs text-center text-muted">
+<p className="text-xs text-center text-muted">
                 Already have an account?{" "}
-                <a href="/login" className="text-accent hover:text-accent-hover underline underline-offset-2">{t("signIn")}</a>
+                <button
+                  type="button"
+                  onClick={() => navigate("/login")}
+                  className="text-accent hover:text-accent-hover underline underline-offset-2 p-0 font-inherit bg-transparent cursor-pointer"
+                >
+                  {t("signIn")}
+                </button>
               </p>
             </form>
           </Panel>

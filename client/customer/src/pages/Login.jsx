@@ -156,9 +156,15 @@ export default function Login() {
               <p className="text-xs text-center text-muted">
                 <a href="/forgot-password" className="text-accent hover:text-accent-hover underline underline-offset-2">{t("forgotPassword")}</a>
               </p>
-              <p className="text-xs text-center text-muted">
+<p className="text-xs text-center text-muted">
                 Don't have an account?{" "}
-                <a href="/register" className="text-accent hover:text-accent-hover underline underline-offset-2">{t("signUp")}</a>
+                <button
+                  type="button"
+                  onClick={() => navigate("/register")}
+                  className="text-accent hover:text-accent-hover underline underline-offset-2 p-0 font-inherit bg-transparent cursor-pointer"
+                >
+                  {t("signUp")}
+                </button>
               </p>
             </form>
           </Panel>
