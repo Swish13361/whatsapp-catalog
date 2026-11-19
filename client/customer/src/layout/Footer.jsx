@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-
+import { Icon } from "../ui/Icon.jsx";
+ 
 export function Footer({ supportEmail = "aetherlystore@gmail.com", className }) {
   return (
     <footer className={`border-t border-line bg-surface ${className || ""}`}>
@@ -14,6 +15,12 @@ export function Footer({ supportEmail = "aetherlystore@gmail.com", className }) 
             </Link>
             <a href={`mailto:${supportEmail}`} className="text-text hover:text-accent transition-colors">
               Support
+            </a>
+            <a href="https://wa.me/message/KO52CCS5JKZND1" target="_blank" rel="noopener noreferrer" className="text-text hover:text-accent transition-colors flex items-center gap-1.5">
+              <Icon name="messageCircle" size={14} /> WhatsApp
+            </a>
+            <a href="https://t.me/Aetherlystore" target="_blank" rel="noopener noreferrer" className="text-text hover:text-accent transition-colors flex items-center gap-1.5">
+              <Icon name="send" size={14} /> Telegram
             </a>
           </nav>
           <p>© {new Date().getFullYear()} Aether. All rights reserved.</p>

@@ -104,29 +104,35 @@ export const customerLogin = (credentials) =>
 
 export const getAdminMe = () => adminRequest("/auth/admin/me");
 
-export const getAdminProducts = () => adminRequest("/products");
-
+export const getAdminProducts = () => adminRequest("/products").then((res) => res.products || []);
+ 
 export const createAdminProduct = (product) =>
   adminRequest("/products", { method: "POST", body: JSON.stringify(product) });
-
+ 
 export const updateAdminProduct = (id, changes) =>
   adminRequest(`/products/${encodeURIComponent(id)}`, {
     method: "PATCH",
     body: JSON.stringify(changes),
   });
-
+ 
 export const deleteAdminProduct = (id) =>
   adminRequest(`/products/${encodeURIComponent(id)}`, { method: "DELETE" });
-
+ 
 export const uploadAdminProductImage = async (file) => {
   return uploadToAppwrite(file);
 };
-
+ 
 export const getAdminOrders = ({ status, paymentStatus, page = 1, limit = 20 } = {}) => {
   const query = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (status) query.set("status", status);
   if (paymentStatus) query.set("paymentStatus", paymentStatus);
-  return adminRequest(`/order?${query}`);
+  return adminRequest(`/order?${query}`).then((res) => ({
+    orders: res.orders || [],
+    total: res.total,
+    page: res.page,
+    pages: res.pages,
+    counts: res.counts,
+  }));
 };
 
 export const getAdminOrder = (id) =>

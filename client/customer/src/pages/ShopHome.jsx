@@ -340,7 +340,7 @@ useEffect(() => {
         if (product) {
 addItem(activeSlug, product);
           setTimeout(() => {
-            toast(`${product.name} ${t("addedToCart")}`, "success");
+            toast({ title: `${product.name} ${t("addedToCart")}`, variant: "success" });
           }, 0);
         }
       }
@@ -353,12 +353,12 @@ addItem(activeSlug, product);
 
     if (amount > 0) {
       const mixedCurrency = cartCurrencies.length > 0 && !cartCurrencies.includes(product.currency || "KES");
-      if (mixedCurrency) {
-        toast(t("clearBagToSwitchCurrency"), "warning");
+if (mixedCurrency) {
+        toast({ title: t("clearBagToSwitchCurrency"), variant: "warning" });
         return;
       }
-addItem(activeSlug, product);
-      toast(`${product.name} ${t("addedToCart")}`, "success");
+      addItem(activeSlug, product);
+      toast({ title: `${product.name} ${t("addedToCart")}`, variant: "success" });
     } else {
       changeCartQuantity(activeSlug, product, amount);
     }
