@@ -453,14 +453,14 @@ return (
         <div className="grid lg:grid-cols-[1fr_320px] gap-6 lg:gap-8">
           <div className="min-w-0">
             <section aria-label={t("shop")}>
-              <Panel title="Notice" padded className="bg-accent-soft/30 border-accent/30">
+<Panel title={t("noticeTitle")} padded className="bg-accent-soft/30 border-accent/30">
                 <p className="text-sm text-muted">
-                  Need help with an order? Email <a href={`mailto:${supportEmail}`} className="text-accent hover:text-accent-hover underline underline-offset-2 transition-[color] duration-150">
+                  {t("noticeHelpText")} <a href={`mailto:${supportEmail}`} className="text-accent hover:text-accent-hover underline underline-offset-2 transition-[color] duration-150">
                     {supportEmail}
                   </a>
                 </p>
                 <p className="text-sm text-muted mt-2">
-                  For Claude users, there are currently very few Ccmax Ultra accounts available for sale. These accounts offer guaranteed stability, no KYC, top-ups with physical cards, and a one-month warranty.
+                  {t("noticeClaudeInfo")}
                 </p>
               </Panel>
             </section>
