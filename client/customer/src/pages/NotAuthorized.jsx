@@ -16,9 +16,11 @@ export default function NotAuthorized() {
           Return to store
         </Button>
       </main>
-      <Footer supportEmail="support@aether.example" />
+      <Footer supportEmail="aetherlystore@gmail.com" />
     </ToastProvider>
   );
 }
+
+
 
 

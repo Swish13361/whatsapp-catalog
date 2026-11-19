@@ -46,7 +46,7 @@ export default function ForgotPassword() {
 
 return (
     <ToastProvider>
-      <Page brand="Aether" variant="auth" supportEmail="support@aether.example">
+      <Page brand="Aether" variant="auth" supportEmail="aetherlystore@gmail.com">
         <Card padded className="w-full animate-in slide-in-from-bottom">
           <Panel title={t("forgotPassword")} description="We'll send reset instructions to your email address." padded>
             <form onSubmit={handleSubmit} noValidate className="layout-form">
@@ -80,5 +80,7 @@ return (
     </ToastProvider>
   );
 }
+
+
 
 

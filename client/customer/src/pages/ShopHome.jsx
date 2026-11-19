@@ -363,7 +363,7 @@ useEffect(() => {
     }
   }, [addItem, changeCartQuantity, cartCurrencies, toast, t, navigate, activeSlug]);
 
-  const supportEmail = "support@aether.example";
+  const supportEmail = "aetherlystore@gmail.com";
 
   if (status === "loading") {
     return (
@@ -553,3 +553,5 @@ return (
     </>
   );
 }
+
+

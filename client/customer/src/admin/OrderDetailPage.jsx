@@ -233,9 +233,11 @@ export default function OrderDetailPage() {
           </aside>
         </div>
       </main>
-      <Footer supportEmail="support@aether.example" />
+      <Footer supportEmail="aetherlystore@gmail.com" />
     </ToastProvider>
   );
 }
+
+
 
 

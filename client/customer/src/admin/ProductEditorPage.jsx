@@ -42,7 +42,7 @@ if (products === null) {
 
   return (
     <ToastProvider>
-      <Page brand="Aether" variant="default" supportEmail="support@aether.example">
+      <Page brand="Aether" variant="default" supportEmail="aetherlystore@gmail.com">
         <Panel title={id ? "Edit product" : "New product"} padded>
           <ProductForm
             product={product}
@@ -51,9 +51,11 @@ if (products === null) {
           />
         </Panel>
       </Page>
-      <Footer supportEmail="support@aether.example" />
+      <Footer supportEmail="aetherlystore@gmail.com" />
     </ToastProvider>
   );
 }
+
+
 
 

@@ -134,7 +134,7 @@ export default function OrderDetail() {
 
   return (
     <ToastProvider>
-      <Page brand="Aether" variant="sidebar" supportEmail="support@aether.example">
+      <Page brand="Aether" variant="sidebar" supportEmail="aetherlystore@gmail.com">
         <div className="grid lg:grid-cols-[5fr_7fr] gap-6 lg:gap-8">
           <section className="flex flex-col gap-6 min-w-0">
             <Panel title={t("orderDetail")} description={`#${order.orderCode}`} padded className="animate-in slide-in-from-bottom">
@@ -260,7 +260,7 @@ export default function OrderDetail() {
           </aside>
         </div>
       </Page>
-      <Footer supportEmail="support@aether.example" />
+      <Footer supportEmail="aetherlystore@gmail.com" />
 
       {showCopyToast && (
         <Toast message={t("walletCopied")} variant="success" onClose={() => setShowCopyToast(false)} duration={2000} />
@@ -268,3 +268,5 @@ export default function OrderDetail() {
     </ToastProvider>
   );
 }
+
+

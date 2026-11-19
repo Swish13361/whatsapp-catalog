@@ -136,7 +136,7 @@ export default function MyOrders() {
 
   return (
     <ToastProvider>
-      <Page brand="Aether" variant="default" supportEmail="support@aether.example">
+      <Page brand="Aether" variant="default" supportEmail="aetherlystore@gmail.com">
         <Panel title={t("myOrders")} description="Your orders and their current status." padded>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 animate-in slide-in-from-bottom">
             <div className="flex flex-wrap gap-2" role="group" aria-label={t("filterByStatus")}>
@@ -295,3 +295,5 @@ export default function MyOrders() {
     </ToastProvider>
   );
 }
+
+

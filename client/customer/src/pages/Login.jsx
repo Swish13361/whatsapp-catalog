@@ -84,7 +84,7 @@ export default function Login() {
 
   return (
     <ToastProvider>
-      <Page brand="Aether" variant="auth" supportEmail="support@aether.example">
+      <Page brand="Aether" variant="auth" supportEmail="aetherlystore@gmail.com">
         <Card padded className="w-full animate-in slide-in-from-bottom">
           <div className="text-center mb-6">
             <div className="w-16 h-16 rounded-2xl bg-accent-soft flex items-center justify-center mx-auto mb-4">
@@ -173,3 +173,5 @@ export default function Login() {
     </ToastProvider>
   );
 }
+
+

@@ -123,7 +123,7 @@ export default function Privacy() {
           <h2 className="text-xl font-bold mb-4">12. Contact Us</h2>
           <p>For privacy questions, data requests, or concerns:</p>
           <ul className="list-disc list-inside space-y-1 mt-2">
-            <li>Email: <a href="mailto:support@aether.example" className="text-accent hover:underline">support@aether.example</a></li>
+            <li>Email: <a href="mailto:aetherlystore@gmail.com" className="text-accent hover:underline">aetherlystore@gmail.com</a></li>
             <li>Include "Privacy Request" in the subject line</li>
           </ul>
         </section>
@@ -131,3 +131,4 @@ export default function Privacy() {
     </Page>
   );
 }
+

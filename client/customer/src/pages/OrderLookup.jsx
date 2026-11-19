@@ -85,7 +85,7 @@ export default function OrderLookup() {
 
   return (
     <ToastProvider>
-      <Page brand="Aether" variant="narrow" supportEmail="support@aether.example">
+      <Page brand="Aether" variant="narrow" supportEmail="aetherlystore@gmail.com">
         <Panel title={t("orderLookup")} description="Enter your order number and the email address used for delivery." padded>
           <form onSubmit={handleLookup} className="layout-form" noValidate>
             <div className="form-field">
@@ -210,7 +210,9 @@ export default function OrderLookup() {
           </div>
         )}
       </Page>
-      <Footer supportEmail="support@aether.example" />
+      <Footer supportEmail="aetherlystore@gmail.com" />
     </ToastProvider>
   );
 }
+
+

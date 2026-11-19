@@ -317,7 +317,7 @@ export default function Account() {
           </Card>
         </aside>
       </main>
-      <Footer supportEmail="support@aether.example" />
+      <Footer supportEmail="aetherlystore@gmail.com" />
 
       {showCopyToast && (
         <Toast message={t("emailCopied")} variant="success" onClose={() => setShowCopyToast(false)} duration={2000} />
@@ -325,3 +325,5 @@ export default function Account() {
     </ToastProvider>
   );
 }
+
+

@@ -68,9 +68,11 @@ export default function ResetPassword() {
           </Panel>
         </Card>
       </main>
-      <Footer supportEmail="support@aether.example" />
+      <Footer supportEmail="aetherlystore@gmail.com" />
     </ToastProvider>
   );
 }
+
+
 
 

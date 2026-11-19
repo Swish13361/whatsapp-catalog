@@ -147,7 +147,7 @@ export default function ItemPage() {
   }
 
   return (
-    <Page brand={storeName} variant="sidebar" supportEmail="support@aether.example">
+    <Page brand={storeName} variant="sidebar" supportEmail="aetherlystore@gmail.com">
       <div className="grid lg:grid-cols-[5fr_7fr] gap-6 lg:gap-8 flex-1">
         <section className="flex flex-col gap-4 min-w-0" aria-label="Product preview">
           <div className="relative">
@@ -233,3 +233,5 @@ export default function ItemPage() {
     </Page>
   );
 }
+
+

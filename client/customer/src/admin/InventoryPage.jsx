@@ -65,7 +65,7 @@ if (products === null) {
 
   return (
     <ToastProvider>
-      <Page brand="Aether" variant="default" supportEmail="support@aether.example">
+      <Page brand="Aether" variant="default" supportEmail="aetherlystore@gmail.com">
         {error && <p className="text-sm text-danger mb-4" role="alert">{error}</p>}
         <Panel title="Inventory" description="Stock levels and availability for every product in your catalogue." padded>
           <div className="table-container">
@@ -136,9 +136,11 @@ if (products === null) {
           <p className="mt-3 text-xs text-muted">Changes are saved to your shop immediately. Stock updates also reflect on the storefront.</p>
         </Panel>
       </Page>
-      <Footer supportEmail="support@aether.example" />
+      <Footer supportEmail="aetherlystore@gmail.com" />
     </ToastProvider>
   );
 }
+
+
 
 

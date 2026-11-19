@@ -24,3 +24,5 @@ export function Pagination({ page, pages, onPageChange, className }) {
     </nav>
   );
 }
+
+

@@ -15,7 +15,7 @@ export default function SettingsPage() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [announcement, setAnnouncement] = useState("");
-  const [supportEmail, setSupportEmail] = useState("support@aether.example");
+  const [supportEmail, setSupportEmail] = useState("aetherlystore@gmail.com");
   const [usdtEnabled, setUsdtEnabled] = useState(true);
   const [alipayEnabled, setAlipayEnabled] = useState(false);
   const [bankEnabled, setBankEnabled] = useState(false);
@@ -33,7 +33,7 @@ export default function SettingsPage() {
 
 return (
     <ToastProvider>
-      <Page brand="Aether" variant="default" supportEmail="support@aether.example">
+      <Page brand="Aether" variant="default" supportEmail="aetherlystore@gmail.com">
         <Panel title={t("settings")} description="Announcement text, support contact, and payment methods for your storefront." padded>
           <form onSubmit={handleSave} noValidate className="layout-form">
             <div className="border border-line rounded-lg p-5">
@@ -85,9 +85,11 @@ return (
           </form>
         </Panel>
       </Page>
-      <Footer supportEmail="support@aether.example" />
+      <Footer supportEmail="aetherlystore@gmail.com" />
     </ToastProvider>
   );
 }
+
+
 
 

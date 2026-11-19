@@ -8,3 +8,5 @@ export function PriceTag({ amount, currency = "USDT", className }) {
 }
 
 
+
+

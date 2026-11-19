@@ -263,7 +263,7 @@ export default function Checkout() {
   return (
     <ToastProvider>
       {!isViewMode ? (
-        <Page brand={storeName} variant="sidebar-wide" supportEmail="support@aether.example">
+        <Page brand={storeName} variant="sidebar-wide" supportEmail="aetherlystore@gmail.com">
           <Stepper steps={checkoutSteps} currentStep={currentStep} className="mb-6" />
           
           <section className="flex flex-col gap-6 min-w-0">
@@ -374,7 +374,7 @@ export default function Checkout() {
           </aside>
         </Page>
       ) : (
-        <Page brand={storeName} variant="narrow" supportEmail="support@aether.example">
+        <Page brand={storeName} variant="narrow" supportEmail="aetherlystore@gmail.com">
           <Stepper steps={paymentSteps} currentStep={currentStep} className="mb-6" />
           
           <Panel title={t("orderDetail")} description={`#${orderId}`} padded>
@@ -498,7 +498,7 @@ export default function Checkout() {
           </Panel>
         </Page>
       )}
-      <Footer supportEmail="support@aether.example" />
+      <Footer supportEmail="aetherlystore@gmail.com" />
       
       {showCopyToast && (
         <Toast message={t("walletCopied")} variant="success" onClose={() => setShowCopyToast(false)} duration={2000} />
@@ -506,5 +506,7 @@ export default function Checkout() {
     </ToastProvider>
   );
 }
+
+
 
 
